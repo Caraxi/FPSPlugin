@@ -1,4 +1,4 @@
-﻿using Dalamud.Game.Internal.Network;
+﻿using Dalamud.Game.Internal;
 using Dalamud.Plugin;
 using ImGuiNET;
 using System;
@@ -22,10 +22,19 @@ namespace FPSPlugin {
 		private bool GameUIHidden = false;
 		private Stopwatch sw;
 
+		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
+		private delegate IntPtr GetBaseUIObjDelegate();
+		[UnmanagedFunctionPointer(CallingConvention.ThisCall, CharSet = CharSet.Ansi)]
+		private delegate IntPtr GetUI2ObjByNameDelegate(IntPtr getBaseUIObj, string UIName, int index = 1);
+		private GetBaseUIObjDelegate getBaseUIObj;
+		private GetUI2ObjByNameDelegate getUI2ObjByName;
+
+		private IntPtr chatLogObject;
+
 		public void Dispose() {
 			PluginInterface.UiBuilder.OnBuildUi -= this.BuildUI;
 			PluginInterface.UiBuilder.OnOpenConfigUi -= this.OnConfigCommandHandler;
-			PluginInterface.Framework.Network.OnNetworkMessage -= this.OnNetworkHandler;
+			PluginInterface.Framework.OnUpdateEvent -= this.OnFrameworkUpdate;
 			RemoveCommands();
 		}
 
@@ -42,24 +51,32 @@ namespace FPSPlugin {
 
 			PluginInterface.UiBuilder.OnBuildUi += this.BuildUI;
 			PluginInterface.UiBuilder.OnOpenConfigUi += OnConfigCommandHandler;
-			PluginInterface.Framework.Network.OnNetworkMessage += this.OnNetworkHandler;
+			PluginInterface.Framework.OnUpdateEvent += OnFrameworkUpdate; 
+
+			IntPtr getBaseUIObjScan = PluginInterface.TargetModuleScanner.ScanText("E8 ?? ?? ?? ?? 41 b8 01 00 00 00 48 8d 15 ?? ?? ?? ?? 48 8b 48 20 e8 ?? ?? ?? ?? 48 8b cf");
+			IntPtr getUI2ObjByNameScan = PluginInterface.TargetModuleScanner.ScanText("e8 ?? ?? ?? ?? 48 8b cf 48 89 87 ?? ?? 00 00 e8 ?? ?? ?? ?? 41 b8 01 00 00 00");
+			this.getBaseUIObj = Marshal.GetDelegateForFunctionPointer<GetBaseUIObjDelegate>(getBaseUIObjScan);
+			this.getUI2ObjByName = Marshal.GetDelegateForFunctionPointer<GetUI2ObjByNameDelegate>(getUI2ObjByNameScan);
+			this.chatLogObject = this.getUI2ObjByName(Marshal.ReadIntPtr(this.getBaseUIObj(), 32), "ChatLog", 1);
+
 		}
 
-		private void OnNetworkHandler(IntPtr dataPtr, ushort opCode, uint sourceActorId, uint targetActorId, NetworkMessageDirection direction) {
+		private void OnFrameworkUpdate(Framework framework)
+		{
 			// https://github.com/karashiiro/PingPlugin
-			const ushort eventPlay = 0x02C3;
-			const ushort eventFinish = 0x0239;
-			if (opCode == eventPlay)
-            {
-                var packetData = Marshal.PtrToStructure<EventPlay>(dataPtr);
-                
-                if ((packetData.Flags & 0x00000400) != 0)
-                    GameUIHidden = true;
-            }
-            else if (opCode == eventFinish)
-            {
-                GameUIHidden = false;
-            }
+			if (this.PluginInterface.ClientState.LocalPlayer == null)
+			{
+				GameUIHidden = false;
+				this.chatLogObject = IntPtr.Zero;
+				return;
+			}
+
+			if (chatLogObject == IntPtr.Zero)
+			{
+				this.chatLogObject = this.getUI2ObjByName(Marshal.ReadIntPtr(this.getBaseUIObj(), 32), "ChatLog", 1);
+				return;
+			}
+			GameUIHidden = Marshal.ReadByte(Marshal.ReadIntPtr(this.chatLogObject, 200) + 115) == 0;
 		}
 
 		public void SetupCommands() {
