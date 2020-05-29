@@ -1,6 +1,5 @@
 ﻿using Dalamud.Game.Internal.Network;
 using Dalamud.Plugin;
-using EasyHook;
 using ImGuiNET;
 using System;
 using System.Diagnostics;

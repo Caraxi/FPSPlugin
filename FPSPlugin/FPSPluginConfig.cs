@@ -1,5 +1,4 @@
-﻿using CheapLoc;
-using Dalamud.Configuration;
+﻿using Dalamud.Configuration;
 using Dalamud.Plugin;
 using ImGuiNET;
 using System;
