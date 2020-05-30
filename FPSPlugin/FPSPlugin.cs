@@ -63,20 +63,31 @@ namespace FPSPlugin {
 
 		private void OnFrameworkUpdate(Framework framework)
 		{
-			// https://github.com/karashiiro/PingPlugin
-			if (this.PluginInterface.ClientState.LocalPlayer == null)
+			try
+			{
+				// https://github.com/karashiiro/PingPlugin
+				if (this.PluginInterface.ClientState.LocalPlayer == null)
+				{
+					GameUIHidden = false;
+					this.chatLogObject = IntPtr.Zero;
+					return;
+				}
+
+				if (chatLogObject == IntPtr.Zero)
+				{
+					this.chatLogObject =
+						this.getUI2ObjByName(Marshal.ReadIntPtr(this.getBaseUIObj(), 32), "ChatLog", 1);
+					return;
+				}
+
+				GameUIHidden = Marshal.ReadByte(Marshal.ReadIntPtr(this.chatLogObject, 200) + 115) == 0;
+			}
+			catch (NullReferenceException)
 			{
 				GameUIHidden = false;
 				this.chatLogObject = IntPtr.Zero;
-				return;
 			}
-
-			if (chatLogObject == IntPtr.Zero)
-			{
-				this.chatLogObject = this.getUI2ObjByName(Marshal.ReadIntPtr(this.getBaseUIObj(), 32), "ChatLog", 1);
-				return;
-			}
-			GameUIHidden = Marshal.ReadByte(Marshal.ReadIntPtr(this.chatLogObject, 200) + 115) == 0;
+			
 		}
 
 		public void SetupCommands() {
