@@ -38,9 +38,6 @@
         <Reference Include="ImGuiScene">
           <HintPath>F:\repo\Dalamud\Dalamud\bin\Debug\ImGuiScene.dll</HintPath>
         </Reference>
-        <Reference Include="Lumina">
-          <HintPath>F:\repo\Dalamud\Dalamud\bin\Debug\Lumina.dll</HintPath>
-        </Reference>
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
       <Exec Command="if $(ConfigurationName) == Debug (F:\repo\InstallDalamudDevPlugin\InstallDalamudDevPlugin\bin\Debug\InstallDalamudDevPlugin.exe --build-dir $(TargetDir) &quot;$(TargetFileName)&quot;)&#xD;&#xA;if $(ConfigurationName) == Release (&#xD;&#xA;  powershell New-Item -ItemType Directory -Force -Path '$(ProjectDir)Publish'&#xD;&#xA;  powershell Compress-Archive -Path '$(TargetPath)','$(ProjectDir)$(ProjectName).json' -DestinationPath '$(ProjectDir)Publish\latest.zip' -Force&#xD;&#xA;  echo F|xcopy &quot;$(ProjectDir)$(ProjectName).json&quot; &quot;$(ProjectDir)Publish\$(ProjectName).json&quot; /Y /F&#xD;&#xA;)" />

@@ -2,8 +2,6 @@
 using Dalamud.Plugin;
 using ImGuiNET;
 using System;
-using System.Diagnostics;
-using System.Linq;
 using System.Runtime.InteropServices;
 
 namespace FPSPlugin {
@@ -14,13 +12,8 @@ namespace FPSPlugin {
 		public FPSPluginConfig PluginConfig { get; private set; }
 
 		private bool drawConfigWindow = false;
-
-		private long[] history;
-		private int c = 0;
-		private double lastFps = 0;
-		private int MAX_SIZE = 30;
+		private float lastFps = 0;
 		private bool GameUIHidden = false;
-		private Stopwatch sw;
 
 		[UnmanagedFunctionPointer(CallingConvention.Cdecl)]
 		private delegate IntPtr GetBaseUIObjDelegate();
@@ -43,15 +36,11 @@ namespace FPSPlugin {
 			this.PluginConfig = (FPSPluginConfig)pluginInterface.GetPluginConfig() ?? new FPSPluginConfig();
 			this.PluginConfig.Init(this, pluginInterface);
 
-			history = new long[MAX_SIZE];
-			sw = new Stopwatch();
-			sw.Start();
-
 			SetupCommands();
 
 			PluginInterface.UiBuilder.OnBuildUi += this.BuildUI;
 			PluginInterface.UiBuilder.OnOpenConfigUi += OnConfigCommandHandler;
-			PluginInterface.Framework.OnUpdateEvent += OnFrameworkUpdate; 
+			PluginInterface.Framework.OnUpdateEvent += OnFrameworkUpdate;
 
 			IntPtr getBaseUIObjScan = PluginInterface.TargetModuleScanner.ScanText("E8 ?? ?? ?? ?? 41 b8 01 00 00 00 48 8d 15 ?? ?? ?? ?? 48 8b 48 20 e8 ?? ?? ?? ?? 48 8b cf");
 			IntPtr getUI2ObjByNameScan = PluginInterface.TargetModuleScanner.ScanText("e8 ?? ?? ?? ?? 48 8b cf 48 89 87 ?? ?? 00 00 e8 ?? ?? ?? ?? 41 b8 01 00 00 00");
@@ -61,33 +50,28 @@ namespace FPSPlugin {
 
 		}
 
-		private void OnFrameworkUpdate(Framework framework)
-		{
-			try
-			{
+		private void OnFrameworkUpdate(Framework framework) {
+			try {
+				lastFps = Marshal.PtrToStructure<float>(framework.Address.BaseAddress + 0x165C);
 				// https://github.com/karashiiro/PingPlugin
-				if (this.PluginInterface.ClientState.LocalPlayer == null)
-				{
+				if (this.PluginInterface.ClientState.LocalPlayer == null) {
 					GameUIHidden = false;
 					this.chatLogObject = IntPtr.Zero;
 					return;
 				}
 
-				if (chatLogObject == IntPtr.Zero)
-				{
+				if (chatLogObject == IntPtr.Zero) {
 					this.chatLogObject =
 						this.getUI2ObjByName(Marshal.ReadIntPtr(this.getBaseUIObj(), 32), "ChatLog", 1);
 					return;
 				}
 
 				GameUIHidden = Marshal.ReadByte(Marshal.ReadIntPtr(this.chatLogObject, 200) + 115) == 0;
-			}
-			catch (NullReferenceException)
-			{
+			} catch (NullReferenceException) {
 				GameUIHidden = false;
 				this.chatLogObject = IntPtr.Zero;
 			}
-			
+
 		}
 
 		public void SetupCommands() {
@@ -101,14 +85,10 @@ namespace FPSPlugin {
 
 
 		public void OnConfigCommandHandler(object a, object b) {
-
-			if (b is string s && s == "toggle")
-			{
+			if (b is string s && s == "toggle") {
 				PluginConfig.Enable = !PluginConfig.Enable;
 				PluginConfig.Save();
-			}
-			else
-			{
+			} else {
 				drawConfigWindow = true;
 			}
 
@@ -116,21 +96,10 @@ namespace FPSPlugin {
 
 		public void RemoveCommands() {
 			PluginInterface.CommandManager.RemoveHandler("/pfps");
-
 		}
 
 		private void BuildUI() {
-			
-			long t = sw.ElapsedTicks;
 
-			history[c++] = t;
-
-			if (c == MAX_SIZE) {
-				c = 0;
-				lastFps = 10000000 / history.Average();
-			}
-
-			sw.Restart();
 			drawConfigWindow = drawConfigWindow && PluginConfig.DrawConfigUI();
 			if (!(GameUIHidden && PluginConfig.HideInCutscene) && PluginConfig.Enable) {
 
@@ -152,7 +121,6 @@ namespace FPSPlugin {
 				ImGui.End();
 
 			}
-			
 		}
 	}
 
