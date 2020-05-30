@@ -90,7 +90,17 @@ namespace FPSPlugin {
 
 
 		public void OnConfigCommandHandler(object a, object b) {
-			drawConfigWindow = true;
+
+			if (b is string s && s == "toggle")
+			{
+				PluginConfig.Enable = !PluginConfig.Enable;
+				PluginConfig.Save();
+			}
+			else
+			{
+				drawConfigWindow = true;
+			}
+
 		}
 
 		public void RemoveCommands() {
@@ -111,7 +121,7 @@ namespace FPSPlugin {
 
 			sw.Restart();
 			drawConfigWindow = drawConfigWindow && PluginConfig.DrawConfigUI();
-			if (!(GameUIHidden && PluginConfig.HideInCutscene)) {
+			if (!(GameUIHidden && PluginConfig.HideInCutscene) && PluginConfig.Enable) {
 
 				ImGui.SetNextWindowBgAlpha(PluginConfig.Alpha);
 

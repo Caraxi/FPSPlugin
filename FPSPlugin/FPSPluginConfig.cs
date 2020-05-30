@@ -25,6 +25,8 @@ namespace FPSPlugin {
 
 		public bool HideInCutscene { get; set; }
 
+		public bool Enable { get; set; }
+
 		public FPSPluginConfig() {
 			LoadDefaults();
 		}
@@ -51,11 +53,21 @@ namespace FPSPlugin {
 			ImGuiWindowFlags windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
 			ImGui.Begin($"{plugin.Name} Config", ref drawConfig, windowFlags);
 
+			bool enabled = Enable;
+			if (ImGui.Checkbox("Show Display", ref enabled)) {
+				Enable = enabled;
+				Save();
+			}
+			ImGui.SameLine();
+
+			ImGui.TextColored(new Vector4(0.6f, 0.6f, 0.6f, 1), "/pfps toggle");
+
 			bool locked = Locked;
 			if (ImGui.Checkbox("Lock Display", ref locked)) {
 				Locked = locked;
 				Save();
 			}
+
 			bool hideInCutscene = HideInCutscene;
 			if (ImGui.Checkbox("Hide during cutscenes", ref hideInCutscene)) {
 				HideInCutscene = hideInCutscene;
