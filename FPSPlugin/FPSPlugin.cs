@@ -2,6 +2,7 @@
 using Dalamud.Plugin;
 using ImGuiNET;
 using System;
+using System.Numerics;
 using System.Runtime.InteropServices;
 
 namespace FPSPlugin {
@@ -105,19 +106,17 @@ namespace FPSPlugin {
 
 				ImGui.SetNextWindowBgAlpha(PluginConfig.Alpha);
 
-				ImGuiWindowFlags flags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse;
+				ImGuiWindowFlags flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse;
 
 				if (PluginConfig.Locked) {
 					flags |= ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoMove;
 				}
 
-				if (PluginConfig.ShowDecimals) {
-					ImGui.TextColored(PluginConfig.Colour, $"FPS: {lastFps:F2}");
-				} else {
-					ImGui.TextColored(PluginConfig.Colour, $"FPS: {lastFps:F0}");
-				}
-
+				string fpsText = PluginConfig.ShowDecimals ? $"FPS: {lastFps:F2}" : $"FPS: {lastFps:F0}";
+				Vector2 windowSize =  ImGui.CalcTextSize(fpsText) + (ImGui.GetStyle().WindowPadding * 2);
+				ImGui.SetNextWindowSize(windowSize, ImGuiCond.Always);
 				ImGui.Begin("FPS##fpsPluginMonitorWindow", flags);
+				ImGui.TextColored(PluginConfig.Colour, fpsText);
 				ImGui.End();
 
 			}
