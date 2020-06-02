@@ -51,10 +51,10 @@ namespace FPSPlugin {
 		public bool DrawConfigUI() {
 			bool drawConfig = true;
 			ImGuiWindowFlags windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
-			ImGui.Begin($"{plugin.Name} Config", ref drawConfig, windowFlags);
+			ImGui.Begin($"{plugin.Name} Config##fpsPluginConfigWindow", ref drawConfig, windowFlags);
 
 			bool enabled = Enable;
-			if (ImGui.Checkbox("Show Display", ref enabled)) {
+			if (ImGui.Checkbox("Show Display##fpsPluginEnabledSetting", ref enabled)) {
 				Enable = enabled;
 				Save();
 			}
@@ -63,37 +63,37 @@ namespace FPSPlugin {
 			ImGui.TextColored(new Vector4(0.6f, 0.6f, 0.6f, 1), "/pfps toggle");
 
 			bool locked = Locked;
-			if (ImGui.Checkbox("Lock Display", ref locked)) {
+			if (ImGui.Checkbox("Lock Display##fpsPluginLockSetting", ref locked)) {
 				Locked = locked;
 				Save();
 			}
 
 			bool hideInCutscene = HideInCutscene;
-			if (ImGui.Checkbox("Hide during cutscenes", ref hideInCutscene)) {
+			if (ImGui.Checkbox("Hide during cutscenes##fpsPluginHideSetting", ref hideInCutscene)) {
 				HideInCutscene = hideInCutscene;
 				Save();
 			}
 
 			bool decimals = ShowDecimals;
-			if (ImGui.Checkbox("Show Decimals", ref decimals)) {
+			if (ImGui.Checkbox("Show Decimals##fpsPluginDecimalsSetting", ref decimals)) {
 				ShowDecimals = decimals;
 				Save();
 			}
 
 			float bgAlpha = Alpha;
-			if (ImGui.SliderFloat("Background Opacity", ref bgAlpha, 0, 1)) {
+			if (ImGui.SliderFloat("Background Opacity##fpsPluginOpacitySetting", ref bgAlpha, 0, 1)) {
 				Alpha = Math.Max(0, Math.Min(1, bgAlpha));
 				Save();
 			}
 
 			Vector4 colour = Colour;
-			if (ImGui.ColorEdit4("Text Colour", ref colour)) {
+			if (ImGui.ColorEdit4("Text Colour##fpsPluginColorSetting", ref colour)) {
 				Colour = colour;
 				Save();
 			}
 
 			ImGui.Separator();
-			if (ImGui.Button("Restore Default")) {
+			if (ImGui.Button("Restore Default##fpsPluginDefaultsButton")) {
 				LoadDefaults();
 				Save();
 			}

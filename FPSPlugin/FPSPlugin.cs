@@ -111,13 +111,13 @@ namespace FPSPlugin {
 					flags |= ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoMove;
 				}
 
-				ImGui.Begin("FPS", flags);
 				if (PluginConfig.ShowDecimals) {
 					ImGui.TextColored(PluginConfig.Colour, $"FPS: {lastFps:F2}");
 				} else {
 					ImGui.TextColored(PluginConfig.Colour, $"FPS: {lastFps:F0}");
 				}
 
+				ImGui.Begin("FPS##fpsPluginMonitorWindow", flags);
 				ImGui.End();
 
 			}
