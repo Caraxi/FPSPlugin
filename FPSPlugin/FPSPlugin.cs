@@ -41,6 +41,7 @@ namespace FPSPlugin {
 			getBaseUIObj = null;
 			getUI2ObjByName = null;
 			RemoveCommands();
+			PluginInterface.Dispose();
 		}
 
 		public void Initialize(DalamudPluginInterface pluginInterface) {
