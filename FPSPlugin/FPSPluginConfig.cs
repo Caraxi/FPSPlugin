@@ -6,12 +6,9 @@ using System.Numerics;
 
 namespace FPSPlugin {
 	public class FPSPluginConfig : IPluginConfiguration {
+		[NonSerialized] private DalamudPluginInterface pluginInterface;
 
-		[NonSerialized]
-		private DalamudPluginInterface pluginInterface;
-
-		[NonSerialized]
-		private FPSPlugin plugin;
+		[NonSerialized] private FPSPlugin plugin;
 
 		public int Version { get; set; }
 
@@ -27,6 +24,11 @@ namespace FPSPlugin {
 
 		public bool Enable { get; set; }
 
+		public int HistorySnapshotCount { get; set; }
+
+		public bool ShowAverage { get; set; }
+		public bool ShowMinimum { get; set; }
+
 		public FPSPluginConfig() {
 			LoadDefaults();
 		}
@@ -37,6 +39,8 @@ namespace FPSPlugin {
 			Locked = false;
 			HideInCutscene = true;
 			ShowDecimals = false;
+			HistorySnapshotCount = 1;
+			ShowAverage = false;
 		}
 
 		public void Init(FPSPlugin plugin, DalamudPluginInterface pluginInterface) {
@@ -58,6 +62,7 @@ namespace FPSPlugin {
 				Enable = enabled;
 				Save();
 			}
+
 			ImGui.SameLine();
 
 			ImGui.TextColored(new Vector4(0.6f, 0.6f, 0.6f, 1), "/pfps toggle");
@@ -80,9 +85,35 @@ namespace FPSPlugin {
 				Save();
 			}
 
+			bool showAverage = ShowAverage;
+			if (ImGui.Checkbox("Show Average##fpsPluginShowAverageSetting", ref showAverage)) {
+				ShowAverage = showAverage;
+				Save();
+			}
+
+			bool showMin = ShowMinimum;
+			if (ImGui.Checkbox("Show Minimum##fpsPluginShowMinimumSetting", ref showMin)) {
+				ShowMinimum = showMin;
+				Save();
+			}
+
 			float bgAlpha = Alpha;
 			if (ImGui.SliderFloat("Background Opacity##fpsPluginOpacitySetting", ref bgAlpha, 0, 1)) {
 				Alpha = Math.Max(0, Math.Min(1, bgAlpha));
+				Save();
+			}
+
+			int historySnapshotCount = HistorySnapshotCount;
+			if (ImGui.InputInt("Tracking Timespan (Seconds)", ref historySnapshotCount, 1, 60)) {
+				if (historySnapshotCount < 1) {
+					historySnapshotCount = 1;
+				}
+
+				if (historySnapshotCount > 10000) {
+					historySnapshotCount = 10000;
+				}
+
+				HistorySnapshotCount = historySnapshotCount;
 				Save();
 			}
 
@@ -102,6 +133,5 @@ namespace FPSPlugin {
 
 			return drawConfig;
 		}
-
 	}
 }
