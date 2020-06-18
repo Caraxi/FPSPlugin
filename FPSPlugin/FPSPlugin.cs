@@ -116,8 +116,11 @@ namespace FPSPlugin {
                 }
 
                 if (chatLogObject == IntPtr.Zero) {
-                    this.chatLogObject =
-                        this.getUI2ObjByName(Marshal.ReadIntPtr(this.getBaseUIObj(), 32), "ChatLog", 1);
+                    var baseUi = this.getBaseUIObj();
+                    if (baseUi == IntPtr.Zero) return;
+                    var baseOffset = Marshal.ReadIntPtr(baseUi, 32);
+                    if (baseOffset == IntPtr.Zero) return;
+                    this.chatLogObject = this.getUI2ObjByName(baseOffset, "ChatLog", 1);
                     return;
                 }
 
