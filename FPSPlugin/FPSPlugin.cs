@@ -62,10 +62,6 @@ namespace FPSPlugin {
 
             SetupCommands();
 
-            PluginInterface.UiBuilder.OnBuildUi += this.BuildUI;
-            PluginInterface.UiBuilder.OnOpenConfigUi += OnConfigCommandHandler;
-            PluginInterface.Framework.OnUpdateEvent += OnFrameworkUpdate;
-
             var getBaseUIObjScan = PluginInterface.TargetModuleScanner.ScanText("E8 ?? ?? ?? ?? 41 b8 01 00 00 00 48 8d 15 ?? ?? ?? ?? 48 8b 48 20 e8 ?? ?? ?? ?? 48 8b cf");
             var getUI2ObjByNameScan = PluginInterface.TargetModuleScanner.ScanText("e8 ?? ?? ?? ?? 48 8b cf 48 89 87 ?? ?? 00 00 e8 ?? ?? ?? ?? 41 b8 01 00 00 00");
             this.getBaseUIObj = Marshal.GetDelegateForFunctionPointer<GetBaseUIObjDelegate>(getBaseUIObjScan);
@@ -80,6 +76,10 @@ namespace FPSPlugin {
             })));
 
             toggleUIHook.Enable();
+
+            PluginInterface.UiBuilder.OnBuildUi += this.BuildUI;
+            PluginInterface.UiBuilder.OnOpenConfigUi += OnConfigCommandHandler;
+            PluginInterface.Framework.OnUpdateEvent += OnFrameworkUpdate;
         }
 
         private void OnFrameworkUpdate(Framework framework) {
