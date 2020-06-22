@@ -30,6 +30,8 @@ namespace FPSPlugin {
         public bool ShowMinimum { get; set; }
         public float FontSize { get; set; } = 16;
 
+        public bool MultiLine { get; set; }
+
         public FPSPluginConfig() {
             LoadDefaults();
         }
@@ -95,6 +97,12 @@ namespace FPSPlugin {
             var showMin = ShowMinimum;
             if (ImGui.Checkbox("Show Minimum##fpsPluginShowMinimumSetting", ref showMin)) {
                 ShowMinimum = showMin;
+                Save();
+            }
+
+            var multiLine = MultiLine;
+            if (ImGui.Checkbox("Multiline##fpsPluginMultiline", ref multiLine)) {
+                MultiLine = multiLine;
                 Save();
             }
 

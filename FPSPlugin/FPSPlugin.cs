@@ -108,21 +108,24 @@ namespace FPSPlugin {
                     fpsHistoryInterval.Restart();
                     // FPS values are only updated in memory once per second.
                     var fps = Marshal.PtrToStructure<float>(PluginInterface.Framework.Address.BaseAddress + 0x165C);
+                    var windowInactive = Marshal.ReadByte(framework.Address.BaseAddress, 0x1668) == 1;
                     if (fps > maxSeenFps) maxSeenFps = fps;
 
                     fpsText = $"FPS:{FormatFpsValue(fps)}";
                     if (PluginConfig.ShowAverage || PluginConfig.ShowMinimum) {
-                        fpsHistory.Add(fps);
+                        if (!windowInactive) fpsHistory.Add(fps);
                         if (fpsHistory.Count > PluginConfig.HistorySnapshotCount) {
                             fpsHistory.RemoveRange(0, fpsHistory.Count - PluginConfig.HistorySnapshotCount);
                         }
 
                         if (PluginConfig.ShowAverage) {
-                            fpsText += $" / Average:{FormatFpsValue(fpsHistory.Average())}";
+                            fpsText += PluginConfig.MultiLine ? "\n" : " / ";
+                            fpsText += $"Avg:{FormatFpsValue(fpsHistory.Average())}";
                         }
 
                         if (PluginConfig.ShowMinimum) {
-                            fpsText += $" / Min:{FormatFpsValue(fpsHistory.Min())}";
+                            fpsText += PluginConfig.MultiLine ? "\n" : " / ";
+                            fpsText += $"Min:{FormatFpsValue(fpsHistory.Min())}";
                         }
                     }
 
@@ -253,7 +256,11 @@ namespace FPSPlugin {
             drawConfigWindow = drawConfigWindow && PluginConfig.DrawConfigUI();
             if ((gameUIHidden || chatHidden) && PluginConfig.HideInCutscene || !PluginConfig.Enable || string.IsNullOrEmpty(fpsText)) return;
             ImGui.SetNextWindowBgAlpha(PluginConfig.Alpha);
-
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(2));
+            ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
+            ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
+            ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
             var flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse;
 
             if (PluginConfig.Locked) {
@@ -265,12 +272,12 @@ namespace FPSPlugin {
                 windowSize = ImGui.CalcTextSize(fpsText) + (ImGui.GetStyle().WindowPadding * 2);
             }
 
-             
             ImGui.SetNextWindowSize(windowSize, ImGuiCond.Always);
             
             ImGui.Begin("FPS##fpsPluginMonitorWindow", flags);
             ImGui.TextColored(PluginConfig.Colour, fpsText);
             ImGui.End();
+            ImGui.PopStyleVar(5);
             if (fontBuilt) ImGui.PopFont();
         }
     }
