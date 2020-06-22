@@ -28,6 +28,7 @@ namespace FPSPlugin {
 
         public bool ShowAverage { get; set; }
         public bool ShowMinimum { get; set; }
+        public float FontSize { get; set; } = 16;
 
         public FPSPluginConfig() {
             LoadDefaults();
@@ -53,11 +54,11 @@ namespace FPSPlugin {
         }
 
         public bool DrawConfigUI() {
-            bool drawConfig = true;
+            var drawConfig = true;
             ImGuiWindowFlags windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
             ImGui.Begin($"{plugin.Name} Config##fpsPluginConfigWindow", ref drawConfig, windowFlags);
 
-            bool enabled = Enable;
+            var enabled = Enable;
             if (ImGui.Checkbox("Show Display##fpsPluginEnabledSetting", ref enabled)) {
                 Enable = enabled;
                 Save();
@@ -67,43 +68,43 @@ namespace FPSPlugin {
 
             ImGui.TextColored(new Vector4(0.6f, 0.6f, 0.6f, 1), "/pfps [show|hide|toggle]");
 
-            bool locked = Locked;
+            var locked = Locked;
             if (ImGui.Checkbox("Lock Display##fpsPluginLockSetting", ref locked)) {
                 Locked = locked;
                 Save();
             }
 
-            bool hideInCutscene = HideInCutscene;
+            var hideInCutscene = HideInCutscene;
             if (ImGui.Checkbox("Hide when chat is hidden##fpsPluginHideSetting", ref hideInCutscene)) {
                 HideInCutscene = hideInCutscene;
                 Save();
             }
 
-            bool decimals = ShowDecimals;
+            var decimals = ShowDecimals;
             if (ImGui.Checkbox("Show Decimals##fpsPluginDecimalsSetting", ref decimals)) {
                 ShowDecimals = decimals;
                 Save();
             }
 
-            bool showAverage = ShowAverage;
+            var showAverage = ShowAverage;
             if (ImGui.Checkbox("Show Average##fpsPluginShowAverageSetting", ref showAverage)) {
                 ShowAverage = showAverage;
                 Save();
             }
 
-            bool showMin = ShowMinimum;
+            var showMin = ShowMinimum;
             if (ImGui.Checkbox("Show Minimum##fpsPluginShowMinimumSetting", ref showMin)) {
                 ShowMinimum = showMin;
                 Save();
             }
 
-            float bgAlpha = Alpha;
+            var bgAlpha = Alpha;
             if (ImGui.SliderFloat("Background Opacity##fpsPluginOpacitySetting", ref bgAlpha, 0, 1)) {
                 Alpha = Math.Max(0, Math.Min(1, bgAlpha));
                 Save();
             }
 
-            int historySnapshotCount = HistorySnapshotCount;
+            var historySnapshotCount = HistorySnapshotCount;
             if (ImGui.InputInt("Tracking Timespan (Seconds)", ref historySnapshotCount, 1, 60)) {
                 if (historySnapshotCount < 1) {
                     historySnapshotCount = 1;
@@ -117,7 +118,18 @@ namespace FPSPlugin {
                 Save();
             }
 
-            Vector4 colour = Colour;
+            var fontSize = FontSize;
+            if (ImGui.SliderFloat("Font Size##fpsPluginFontSizeSetting", ref fontSize, 6, 100)) {
+                FontSize = fontSize;
+                Save();
+            }
+
+            ImGui.SameLine();
+            if (ImGui.SmallButton("Reload Font")) {
+                plugin.ReloadFont();
+            }
+
+            var colour = Colour;
             if (ImGui.ColorEdit4("Text Colour##fpsPluginColorSetting", ref colour)) {
                 Colour = colour;
                 Save();

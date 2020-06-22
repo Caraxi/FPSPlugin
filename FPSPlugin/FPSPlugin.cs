@@ -4,8 +4,10 @@ using ImGuiNET;
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Reflection;
 using System.Runtime.InteropServices;
 using Dalamud.Hooking;
 
@@ -15,9 +17,9 @@ namespace FPSPlugin {
         public DalamudPluginInterface PluginInterface { get; private set; }
         public FPSPluginConfig PluginConfig { get; private set; }
 
-        private bool drawConfigWindow = false;
-        private bool gameUIHidden = false;
-        private bool chatHidden = false;
+        private bool drawConfigWindow;
+        private bool gameUIHidden;
+        private bool chatHidden;
 
         [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
         private delegate IntPtr GetBaseUIObjDelegate();
@@ -39,10 +41,19 @@ namespace FPSPlugin {
         private string fpsText;
         private Vector2 windowSize = Vector2.One;
 
+        private bool fontBuilt;
+        private bool fontLoadFailed;
+        private ImFontPtr font;
+        private IntPtr fontData = IntPtr.Zero;
+        private int fontDataLength;
+        private float maxSeenFps;
+
         public void Dispose() {
             PluginInterface.UiBuilder.OnBuildUi -= this.BuildUI;
+            PluginInterface.UiBuilder.OnBuildFonts -= this.BuildFont;
             PluginInterface.UiBuilder.OnOpenConfigUi -= this.OnConfigCommandHandler;
             PluginInterface.Framework.OnUpdateEvent -= this.OnFrameworkUpdate;
+            PluginInterface.UiBuilder.RebuildFonts();
             fpsHistoryInterval?.Stop();
             getBaseUIObj = null;
             getUI2ObjByName = null;
@@ -66,7 +77,7 @@ namespace FPSPlugin {
             var getUI2ObjByNameScan = PluginInterface.TargetModuleScanner.ScanText("e8 ?? ?? ?? ?? 48 8b cf 48 89 87 ?? ?? 00 00 e8 ?? ?? ?? ?? 41 b8 01 00 00 00");
             this.getBaseUIObj = Marshal.GetDelegateForFunctionPointer<GetBaseUIObjDelegate>(getBaseUIObjScan);
             this.getUI2ObjByName = Marshal.GetDelegateForFunctionPointer<GetUI2ObjByNameDelegate>(getUI2ObjByNameScan);
-            this.chatLogObject = this.getUI2ObjByName(Marshal.ReadIntPtr(this.getBaseUIObj(), 32), "ChatLog", 1);
+            this.chatLogObject = this.getUI2ObjByName(Marshal.ReadIntPtr(this.getBaseUIObj(), 32), "ChatLog");
 
 
             var toggleUiPtr = pluginInterface.TargetModuleScanner.ScanText("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 0F B6 B9 ?? ?? ?? ?? B8 ?? ?? ?? ??");
@@ -80,15 +91,26 @@ namespace FPSPlugin {
             PluginInterface.UiBuilder.OnBuildUi += this.BuildUI;
             PluginInterface.UiBuilder.OnOpenConfigUi += OnConfigCommandHandler;
             PluginInterface.Framework.OnUpdateEvent += OnFrameworkUpdate;
+            PluginInterface.UiBuilder.OnBuildFonts += this.BuildFont;
         }
+
+        private string FormatFpsValue(float value) {
+            if (maxSeenFps > 1000) return PluginConfig.ShowDecimals ? $"{value,8:####0.00}" : $"{value,5:####0}";
+            if (maxSeenFps > 100) return PluginConfig.ShowDecimals ? $"{value,7:###0.00}" : $"{value,4:###0}";
+            return PluginConfig.ShowDecimals ? $"{value,6:##0.00}" : $"{value,3:##0}";
+        }
+
 
         private void OnFrameworkUpdate(Framework framework) {
             try {
+                if (!(fontBuilt || fontLoadFailed)) return;
                 if (fpsHistoryInterval.ElapsedMilliseconds > 1000) {
                     fpsHistoryInterval.Restart();
                     // FPS values are only updated in memory once per second.
                     var fps = Marshal.PtrToStructure<float>(PluginInterface.Framework.Address.BaseAddress + 0x165C);
-                    fpsText = PluginConfig.ShowDecimals ? $"FPS: {fps:F2}" : $"FPS: {fps:F0}";
+                    if (fps > maxSeenFps) maxSeenFps = fps;
+
+                    fpsText = $"FPS:{FormatFpsValue(fps)}";
                     if (PluginConfig.ShowAverage || PluginConfig.ShowMinimum) {
                         fpsHistory.Add(fps);
                         if (fpsHistory.Count > PluginConfig.HistorySnapshotCount) {
@@ -96,11 +118,11 @@ namespace FPSPlugin {
                         }
 
                         if (PluginConfig.ShowAverage) {
-                            fpsText += PluginConfig.ShowDecimals ? $" / Average: {fpsHistory.Average():F2}" : $" / Average: {fpsHistory.Average():F0}";
+                            fpsText += $" / Average:{FormatFpsValue(fpsHistory.Average())}";
                         }
 
                         if (PluginConfig.ShowMinimum) {
-                            fpsText += PluginConfig.ShowDecimals ? $" / Min: {fpsHistory.Min():F2}" : $" / Min: {fpsHistory.Min():F0}";
+                            fpsText += $" / Min:{FormatFpsValue(fpsHistory.Min())}";
                         }
                     }
 
@@ -120,9 +142,9 @@ namespace FPSPlugin {
                     if (baseUi == IntPtr.Zero) return;
                     var baseOffset = Marshal.ReadIntPtr(baseUi, 32);
                     if (baseOffset == IntPtr.Zero) return;
-                    this.chatLogObject = this.getUI2ObjByName(baseOffset, "ChatLog", 1);
+                    this.chatLogObject = this.getUI2ObjByName(baseOffset, "ChatLog");
                     return;
-                }
+                }       
 
                 var chatLogProperties = Marshal.ReadIntPtr(this.chatLogObject, 0xC8);
                 if (chatLogProperties == IntPtr.Zero) {
@@ -181,7 +203,53 @@ namespace FPSPlugin {
             PluginInterface.CommandManager.RemoveHandler("/pfps");
         }
 
+        private void BuildFont() {
+            fontBuilt = false;
+            try {
+                if (fontData == IntPtr.Zero) {
+                    using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("FPSPlugin.font.ttf");
+
+                    if (s == null) {
+                        PluginLog.LogError("Failed to load font");
+
+                        foreach (var a in Assembly.GetExecutingAssembly().GetManifestResourceNames()) {
+                            PluginLog.LogError(a);
+                        }
+
+                        fontLoadFailed = true;
+                        return;
+                    }
+
+                    using var br = new BinaryReader(s);
+
+                    var fontBytes = br.ReadBytes((int) s.Length);
+                    fontDataLength = fontBytes.Length;
+
+                    fontData = Marshal.AllocHGlobal(fontBytes.Length);
+                    Marshal.Copy(fontBytes, 0, fontData, fontBytes.Length);
+                }
+
+
+                font = ImGui.GetIO().Fonts.AddFontFromMemoryTTF(fontData, fontDataLength, Math.Max(8, Math.Abs(PluginConfig.FontSize)));
+                fontBuilt = true;
+            } catch (Exception ex) {
+                PluginLog.LogError(ex.ToString());
+                fontLoadFailed = true;
+            }
+        }
+
+        internal void ReloadFont() {
+            PluginInterface.UiBuilder.RebuildFonts();
+            fontData = IntPtr.Zero;
+        }
+
+
         private void BuildUI() {
+            if (!fontBuilt && !fontLoadFailed) {
+                PluginInterface.UiBuilder.RebuildFonts();
+                return;
+            }
+
             drawConfigWindow = drawConfigWindow && PluginConfig.DrawConfigUI();
             if ((gameUIHidden || chatHidden) && PluginConfig.HideInCutscene || !PluginConfig.Enable || string.IsNullOrEmpty(fpsText)) return;
             ImGui.SetNextWindowBgAlpha(PluginConfig.Alpha);
@@ -192,14 +260,18 @@ namespace FPSPlugin {
                 flags |= ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoMove;
             }
 
+            if (fontBuilt) ImGui.PushFont(font);
             if (windowSize == Vector2.Zero) {
                 windowSize = ImGui.CalcTextSize(fpsText) + (ImGui.GetStyle().WindowPadding * 2);
             }
 
+             
             ImGui.SetNextWindowSize(windowSize, ImGuiCond.Always);
+            
             ImGui.Begin("FPS##fpsPluginMonitorWindow", flags);
             ImGui.TextColored(PluginConfig.Colour, fpsText);
             ImGui.End();
+            if (fontBuilt) ImGui.PopFont();
         }
     }
 }

@@ -15,9 +15,9 @@
     </PropertyGroup>
     <PropertyGroup Label="Feature">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <AssemblyVersion>1.3.0.1</AssemblyVersion>
-        <Version>1.3.0.1</Version>
-        <FileVersion>1.3.0.1</FileVersion>
+        <AssemblyVersion>1.3.0.2</AssemblyVersion>
+        <Version>1.3.0.2</Version>
+        <FileVersion>1.3.0.2</FileVersion>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
@@ -28,6 +28,9 @@
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     </PropertyGroup>
+	<ItemGroup>
+      <EmbeddedResource Include="font.ttf" />
+    </ItemGroup>
     <ItemGroup>
         <Reference Include="Dalamud">
           <HintPath>F:\repo\Dalamud\Dalamud\bin\Debug\Dalamud.dll</HintPath>
