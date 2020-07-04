@@ -15,9 +15,9 @@
     </PropertyGroup>
     <PropertyGroup Label="Feature">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <AssemblyVersion>1.3.0.2</AssemblyVersion>
-        <Version>1.3.0.2</Version>
-        <FileVersion>1.3.0.2</FileVersion>
+        <AssemblyVersion>1.4.0.0</AssemblyVersion>
+        <Version>1.4.0.0</Version>
+        <FileVersion>1.4.0.0</FileVersion>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
@@ -43,6 +43,6 @@
         </Reference>
     </ItemGroup>
     <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-      <Exec Command="if $(ConfigurationName) == Debug (F:\repo\InstallDalamudDevPlugin\InstallDalamudDevPlugin\bin\Debug\InstallDalamudDevPlugin.exe --build-dir $(TargetDir) &quot;$(TargetFileName)&quot;)&#xD;&#xA;if $(ConfigurationName) == Release (&#xD;&#xA;  powershell New-Item -ItemType Directory -Force -Path '$(ProjectDir)Publish'&#xD;&#xA;  powershell Compress-Archive -Path '$(TargetPath)','$(ProjectDir)$(ProjectName).json' -DestinationPath '$(ProjectDir)Publish\latest.zip' -Force&#xD;&#xA;  echo F|xcopy &quot;$(ProjectDir)$(ProjectName).json&quot; &quot;$(ProjectDir)Publish\$(ProjectName).json&quot; /Y /F&#xD;&#xA;)" />
+      <Exec Command="cd $(ProjectDir)$(OutDir)&#xD;&#xA;for %25%25i in (*.*) do if not &quot;%25%25i&quot;==&quot;$(TargetName).dll&quot; if not &quot;%25%25i&quot;==&quot;$(TargetName).pdb&quot; del /q &quot;%25%25i&quot;&#xD;&#xA;if $(ConfigurationName) == Release (&#xD;&#xA;  powershell New-Item -ItemType Directory -Force -Path '$(ProjectDir)Publish'&#xD;&#xA;  powershell Compress-Archive -Path '$(TargetPath)','$(ProjectDir)$(ProjectName).json','$(ProjectDir)$(OutDir)$(TargetName).pdb' -DestinationPath '$(ProjectDir)Publish\latest.zip' -Force&#xD;&#xA;  echo F|xcopy &quot;$(ProjectDir)$(ProjectName).json&quot; &quot;$(ProjectDir)Publish\$(ProjectName).json&quot; /Y /F&#xD;&#xA;)" />
     </Target>
 </Project>

@@ -10,6 +10,8 @@ namespace FPSPlugin {
 
         [NonSerialized] private FPSPlugin plugin;
 
+        [NonSerialized] public long FontChangeTime;
+
         public int Version { get; set; }
 
         public bool Locked { get; set; }
@@ -44,6 +46,9 @@ namespace FPSPlugin {
             ShowDecimals = false;
             HistorySnapshotCount = 300;
             ShowAverage = false;
+            MultiLine = false;
+            FontSize = 16;
+            FontChangeTime = DateTime.Now.Ticks;
         }
 
         public void Init(FPSPlugin plugin, DalamudPluginInterface pluginInterface) {
@@ -57,7 +62,7 @@ namespace FPSPlugin {
 
         public bool DrawConfigUI() {
             var drawConfig = true;
-            ImGuiWindowFlags windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
+            var windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
             ImGui.Begin($"{plugin.Name} Config##fpsPluginConfigWindow", ref drawConfig, windowFlags);
 
             var enabled = Enable;
@@ -126,9 +131,10 @@ namespace FPSPlugin {
                 Save();
             }
 
-            var fontSize = FontSize;
-            if (ImGui.SliderFloat("Font Size##fpsPluginFontSizeSetting", ref fontSize, 6, 100)) {
+            var fontSize = (int) FontSize;
+            if (ImGui.SliderInt("Font Size##fpsPluginFontSizeSetting", ref fontSize, 6, 60)) {
                 FontSize = fontSize;
+                FontChangeTime = DateTime.Now.Ticks;
                 Save();
             }
 

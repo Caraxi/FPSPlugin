@@ -245,8 +245,7 @@ namespace FPSPlugin {
             PluginInterface.UiBuilder.RebuildFonts();
             fontData = IntPtr.Zero;
         }
-
-
+        
         private void BuildUI() {
             if (!fontBuilt && !fontLoadFailed) {
                 PluginInterface.UiBuilder.RebuildFonts();
@@ -254,14 +253,25 @@ namespace FPSPlugin {
             }
 
             drawConfigWindow = drawConfigWindow && PluginConfig.DrawConfigUI();
+
+            if (PluginConfig.FontChangeTime > 0) {
+                if (DateTime.Now.Ticks - 10000000 > PluginConfig.FontChangeTime) {
+                    PluginConfig.FontChangeTime = 0;
+                    windowSize = Vector2.Zero;
+                    ReloadFont();
+                }
+            }
+
+
             if ((gameUIHidden || chatHidden) && PluginConfig.HideInCutscene || !PluginConfig.Enable || string.IsNullOrEmpty(fpsText)) return;
             ImGui.SetNextWindowBgAlpha(PluginConfig.Alpha);
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(2));
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4));
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
-            var flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse;
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, Vector2.Zero);
+            var flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar;
 
             if (PluginConfig.Locked) {
                 flags |= ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoMove;
@@ -272,12 +282,12 @@ namespace FPSPlugin {
                 windowSize = ImGui.CalcTextSize(fpsText) + (ImGui.GetStyle().WindowPadding * 2);
             }
 
-            ImGui.SetNextWindowSize(windowSize, ImGuiCond.Always);
             
+            ImGui.SetNextWindowSize(windowSize, ImGuiCond.Always);
             ImGui.Begin("FPS##fpsPluginMonitorWindow", flags);
             ImGui.TextColored(PluginConfig.Colour, fpsText);
             ImGui.End();
-            ImGui.PopStyleVar(5);
+            ImGui.PopStyleVar(6);
             if (fontBuilt) ImGui.PopFont();
         }
     }
