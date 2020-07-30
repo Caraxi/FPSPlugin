@@ -34,7 +34,7 @@ namespace FPSPlugin {
 
         private Hook<ToggleUIDelegate> toggleUIHook;
 
-        private IntPtr chatLogObject;
+        private IntPtr chatLogObject = IntPtr.Zero;
 
         private List<float> fpsHistory;
         private Stopwatch fpsHistoryInterval;
@@ -68,16 +68,11 @@ namespace FPSPlugin {
             this.PluginConfig.Init(this, pluginInterface);
             fpsText = string.Empty;
             fpsHistory = new List<float>();
-            fpsHistoryInterval = new Stopwatch();
-            fpsHistoryInterval.Start();
-
-            SetupCommands();
 
             var getBaseUIObjScan = PluginInterface.TargetModuleScanner.ScanText("E8 ?? ?? ?? ?? 41 b8 01 00 00 00 48 8d 15 ?? ?? ?? ?? 48 8b 48 20 e8 ?? ?? ?? ?? 48 8b cf");
             var getUI2ObjByNameScan = PluginInterface.TargetModuleScanner.ScanText("e8 ?? ?? ?? ?? 48 8b cf 48 89 87 ?? ?? 00 00 e8 ?? ?? ?? ?? 41 b8 01 00 00 00");
             this.getBaseUIObj = Marshal.GetDelegateForFunctionPointer<GetBaseUIObjDelegate>(getBaseUIObjScan);
             this.getUI2ObjByName = Marshal.GetDelegateForFunctionPointer<GetUI2ObjByNameDelegate>(getUI2ObjByNameScan);
-            this.chatLogObject = this.getUI2ObjByName(Marshal.ReadIntPtr(this.getBaseUIObj(), 32), "ChatLog");
 
 
             var toggleUiPtr = pluginInterface.TargetModuleScanner.ScanText("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 0F B6 B9 ?? ?? ?? ?? B8 ?? ?? ?? ??");
@@ -88,6 +83,9 @@ namespace FPSPlugin {
 
             toggleUIHook.Enable();
 
+            fpsHistoryInterval = new Stopwatch();
+            fpsHistoryInterval.Start();
+            SetupCommands();
             PluginInterface.UiBuilder.OnBuildUi += this.BuildUI;
             PluginInterface.UiBuilder.OnOpenConfigUi += OnConfigCommandHandler;
             PluginInterface.Framework.OnUpdateEvent += OnFrameworkUpdate;
