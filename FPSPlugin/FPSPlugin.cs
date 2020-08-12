@@ -77,7 +77,7 @@ namespace FPSPlugin {
 
             var toggleUiPtr = pluginInterface.TargetModuleScanner.ScanText("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 0F B6 B9 ?? ?? ?? ?? B8 ?? ?? ?? ??");
             toggleUIHook = new Hook<ToggleUIDelegate>(toggleUiPtr, new ToggleUIDelegate(((ptr, b) => {
-                gameUIHidden = (Marshal.ReadByte(ptr, 104008) & 4) == 0;
+                gameUIHidden = (Marshal.ReadByte(ptr, 105168) & 4) == 0;
                 return toggleUIHook.Original(ptr, b);
             })));
 
