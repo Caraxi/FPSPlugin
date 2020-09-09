@@ -44,9 +44,20 @@ namespace FPSPlugin {
         private bool fontBuilt;
         private bool fontLoadFailed;
         private ImFontPtr font;
-        private IntPtr fontData = IntPtr.Zero;
-        private int fontDataLength;
         private float maxSeenFps;
+
+        private string setLocation = null;
+
+        /// <summary>
+        /// LivePluginLoader Helper. Tell the plugin where it is
+        /// </summary>
+        /// <param name="dllPath">Location of the Assembly</param>
+        private void SetLocation(string dllPath)
+        {
+            setLocation = dllPath;     
+        }
+
+        private string Location => setLocation ?? Assembly.GetExecutingAssembly().Location;
 
         public void Dispose() {
             PluginInterface.UiBuilder.OnBuildUi -= this.BuildUI;
@@ -97,7 +108,6 @@ namespace FPSPlugin {
             if (maxSeenFps > 100) return PluginConfig.ShowDecimals ? $"{value,7:###0.00}" : $"{value,4:###0}";
             return PluginConfig.ShowDecimals ? $"{value,6:##0.00}" : $"{value,3:##0}";
         }
-
 
         private void OnFrameworkUpdate(Framework framework) {
             try {
@@ -205,43 +215,26 @@ namespace FPSPlugin {
         }
 
         private void BuildFont() {
+            var fontFile = Path.Combine(Path.GetDirectoryName(Location), "font.ttf");
+
             fontBuilt = false;
-            try {
-                if (fontData == IntPtr.Zero) {
-                    using var s = Assembly.GetExecutingAssembly().GetManifestResourceStream("FPSPlugin.font.ttf");
-
-                    if (s == null) {
-                        PluginLog.LogError("Failed to load font");
-
-                        foreach (var a in Assembly.GetExecutingAssembly().GetManifestResourceNames()) {
-                            PluginLog.LogError(a);
-                        }
-
-                        fontLoadFailed = true;
-                        return;
-                    }
-
-                    using var br = new BinaryReader(s);
-
-                    var fontBytes = br.ReadBytes((int) s.Length);
-                    fontDataLength = fontBytes.Length;
-
-                    fontData = Marshal.AllocHGlobal(fontBytes.Length);
-                    Marshal.Copy(fontBytes, 0, fontData, fontBytes.Length);
+            if (File.Exists(fontFile)) {
+                try {
+                    font = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, PluginConfig.FontSize);
+                    fontBuilt = true;
+                } catch (Exception ex) {
+                    PluginLog.Log($"Font failed to load. {fontFile}");
+                    PluginLog.Log(ex.ToString());
+                    fontLoadFailed = true;
                 }
-
-
-                font = ImGui.GetIO().Fonts.AddFontFromMemoryTTF(fontData, fontDataLength, Math.Max(8, Math.Abs(PluginConfig.FontSize)));
-                fontBuilt = true;
-            } catch (Exception ex) {
-                PluginLog.LogError(ex.ToString());
+            } else {
+                PluginLog.Log($"Font doesn't exist. {fontFile}");
                 fontLoadFailed = true;
             }
         }
 
         internal void ReloadFont() {
             PluginInterface.UiBuilder.RebuildFonts();
-            fontData = IntPtr.Zero;
         }
         
         private void BuildUI() {
