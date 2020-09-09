@@ -46,6 +46,7 @@ namespace FPSPlugin {
         private ImFontPtr font;
         private float maxSeenFps;
 
+#if DEBUG
         private string setLocation = null;
 
         /// <summary>
@@ -58,6 +59,9 @@ namespace FPSPlugin {
         }
 
         private string Location => setLocation ?? Assembly.GetExecutingAssembly().Location;
+#else
+        private string Location => Assembly.GetExecutingAssembly().Location;
+#endif
 
         public void Dispose() {
             PluginInterface.UiBuilder.OnBuildUi -= this.BuildUI;
