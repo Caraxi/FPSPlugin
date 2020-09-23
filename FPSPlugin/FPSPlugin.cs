@@ -18,24 +18,7 @@ namespace FPSPlugin {
         public FPSPluginConfig PluginConfig { get; private set; }
 
         private bool drawConfigWindow;
-        private bool gameUIHidden;
-        private bool chatHidden;
-
-        [UnmanagedFunctionPointer(CallingConvention.Cdecl)]
-        private delegate IntPtr GetBaseUIObjDelegate();
-
-        [UnmanagedFunctionPointer(CallingConvention.ThisCall, CharSet = CharSet.Ansi)]
-        private delegate IntPtr GetUI2ObjByNameDelegate(IntPtr getBaseUIObj, string uiName, int index = 1);
-
-        private GetBaseUIObjDelegate getBaseUIObj;
-        private GetUI2ObjByNameDelegate getUI2ObjByName;
-
-        private delegate IntPtr ToggleUIDelegate(IntPtr baseAddress, byte unknownByte);
-
-        private Hook<ToggleUIDelegate> toggleUIHook;
-
-        private IntPtr chatLogObject = IntPtr.Zero;
-
+        
         private List<float> fpsHistory;
         private Stopwatch fpsHistoryInterval;
         private string fpsText;
@@ -46,22 +29,7 @@ namespace FPSPlugin {
         private ImFontPtr font;
         private float maxSeenFps;
 
-#if DEBUG
-        private string setLocation = null;
-
-        /// <summary>
-        /// LivePluginLoader Helper. Tell the plugin where it is
-        /// </summary>
-        /// <param name="dllPath">Location of the Assembly</param>
-        private void SetLocation(string dllPath)
-        {
-            setLocation = dllPath;     
-        }
-
-        private string Location => setLocation ?? Assembly.GetExecutingAssembly().Location;
-#else
-        private string Location => Assembly.GetExecutingAssembly().Location;
-#endif
+        public string Location { get; private set; } = Assembly.GetExecutingAssembly().Location;
 
         public void Dispose() {
             PluginInterface.UiBuilder.OnBuildUi -= this.BuildUI;
@@ -70,9 +38,6 @@ namespace FPSPlugin {
             PluginInterface.Framework.OnUpdateEvent -= this.OnFrameworkUpdate;
             PluginInterface.UiBuilder.RebuildFonts();
             fpsHistoryInterval?.Stop();
-            getBaseUIObj = null;
-            getUI2ObjByName = null;
-            toggleUIHook?.Disable();
             RemoveCommands();
             PluginInterface.Dispose();
         }
@@ -83,20 +48,6 @@ namespace FPSPlugin {
             this.PluginConfig.Init(this, pluginInterface);
             fpsText = string.Empty;
             fpsHistory = new List<float>();
-
-            var getBaseUIObjScan = PluginInterface.TargetModuleScanner.ScanText("E8 ?? ?? ?? ?? 41 b8 01 00 00 00 48 8d 15 ?? ?? ?? ?? 48 8b 48 20 e8 ?? ?? ?? ?? 48 8b cf");
-            var getUI2ObjByNameScan = PluginInterface.TargetModuleScanner.ScanText("e8 ?? ?? ?? ?? 48 8b cf 48 89 87 ?? ?? 00 00 e8 ?? ?? ?? ?? 41 b8 01 00 00 00");
-            this.getBaseUIObj = Marshal.GetDelegateForFunctionPointer<GetBaseUIObjDelegate>(getBaseUIObjScan);
-            this.getUI2ObjByName = Marshal.GetDelegateForFunctionPointer<GetUI2ObjByNameDelegate>(getUI2ObjByNameScan);
-
-
-            var toggleUiPtr = pluginInterface.TargetModuleScanner.ScanText("48 89 5C 24 ?? 48 89 74 24 ?? 57 48 83 EC 20 0F B6 B9 ?? ?? ?? ?? B8 ?? ?? ?? ??");
-            toggleUIHook = new Hook<ToggleUIDelegate>(toggleUiPtr, new ToggleUIDelegate(((ptr, b) => {
-                gameUIHidden = (Marshal.ReadByte(ptr, 105168) & 4) == 0;
-                return toggleUIHook.Original(ptr, b);
-            })));
-
-            toggleUIHook.Enable();
 
             fpsHistoryInterval = new Stopwatch();
             fpsHistoryInterval.Start();
@@ -126,16 +77,17 @@ namespace FPSPlugin {
                     fpsText = $"FPS:{FormatFpsValue(fps)}";
                     if (PluginConfig.ShowAverage || PluginConfig.ShowMinimum) {
                         if (!windowInactive) fpsHistory.Add(fps);
+
                         if (fpsHistory.Count > PluginConfig.HistorySnapshotCount) {
                             fpsHistory.RemoveRange(0, fpsHistory.Count - PluginConfig.HistorySnapshotCount);
                         }
 
-                        if (PluginConfig.ShowAverage) {
+                        if (PluginConfig.ShowAverage && fpsHistory.Count > 0) {
                             fpsText += PluginConfig.MultiLine ? "\n" : " / ";
                             fpsText += $"Avg:{FormatFpsValue(fpsHistory.Average())}";
                         }
 
-                        if (PluginConfig.ShowMinimum) {
+                        if (PluginConfig.ShowMinimum && fpsHistory.Count > 0) {
                             fpsText += PluginConfig.MultiLine ? "\n" : " / ";
                             fpsText += $"Min:{FormatFpsValue(fpsHistory.Min())}";
                         }
@@ -144,34 +96,8 @@ namespace FPSPlugin {
                     windowSize = Vector2.Zero;
                 }
 
-
-                // https://github.com/karashiiro/PingPlugin
-                if (this.PluginInterface.ClientState.LocalPlayer == null) {
-                    chatHidden = false;
-                    this.chatLogObject = IntPtr.Zero;
-                    return;
-                }
-
-                if (chatLogObject == IntPtr.Zero) {
-                    var baseUi = this.getBaseUIObj();
-                    if (baseUi == IntPtr.Zero) return;
-                    var baseOffset = Marshal.ReadIntPtr(baseUi, 32);
-                    if (baseOffset == IntPtr.Zero) return;
-                    this.chatLogObject = this.getUI2ObjByName(baseOffset, "ChatLog");
-                    return;
-                }       
-
-                var chatLogProperties = Marshal.ReadIntPtr(this.chatLogObject, 0xC8);
-                if (chatLogProperties == IntPtr.Zero) {
-                    this.chatHidden = true;
-                    return;
-                }
-
-                chatHidden = Marshal.ReadByte(chatLogProperties + 0x73) == 0;
             } catch (Exception ex) {
                 PluginLog.LogError(ex.Message);
-                chatHidden = false;
-                this.chatLogObject = IntPtr.Zero;
             }
         }
 
@@ -186,18 +112,22 @@ namespace FPSPlugin {
         public void OnConfigCommandHandler(object a, object b) {
             if (b is string s) {
                 switch (s.ToLower()) {
+                    case "t":
                     case "toggle": {
                         PluginConfig.Enable = !PluginConfig.Enable;
                         break;
                     }
+                    case "s":
                     case "show": {
                         PluginConfig.Enable = true;
                         break;
                     }
+                    case "h":
                     case "hide": {
                         PluginConfig.Enable = false;
                         break;
                     }
+                    case "r":
                     case "reset": {
                         fpsHistory.Clear();
                         break;
@@ -242,6 +172,7 @@ namespace FPSPlugin {
         }
         
         private void BuildUI() {
+
             if (!fontBuilt && !fontLoadFailed) {
                 PluginInterface.UiBuilder.RebuildFonts();
                 return;
@@ -257,8 +188,8 @@ namespace FPSPlugin {
                 }
             }
 
+            if (!PluginConfig.Enable || string.IsNullOrEmpty(fpsText)) return;
 
-            if ((gameUIHidden || chatHidden) && PluginConfig.HideInCutscene || !PluginConfig.Enable || string.IsNullOrEmpty(fpsText)) return;
             ImGui.SetNextWindowBgAlpha(PluginConfig.Alpha);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4));
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
