@@ -22,8 +22,6 @@ namespace FPSPlugin {
 
         public Vector4 Colour { get; set; }
 
-        public bool HideInCutscene { get; set; }
-
         public bool Enable { get; set; }
 
         public int HistorySnapshotCount { get; set; }
@@ -42,7 +40,6 @@ namespace FPSPlugin {
             Colour = new Vector4(0, 1, 1, 1);
             Alpha = 0.5f;
             Locked = false;
-            HideInCutscene = true;
             ShowDecimals = false;
             HistorySnapshotCount = 300;
             ShowAverage = false;
@@ -78,12 +75,6 @@ namespace FPSPlugin {
             var locked = Locked;
             if (ImGui.Checkbox("Lock Display##fpsPluginLockSetting", ref locked)) {
                 Locked = locked;
-                Save();
-            }
-
-            var hideInCutscene = HideInCutscene;
-            if (ImGui.Checkbox("Hide when chat is hidden##fpsPluginHideSetting", ref hideInCutscene)) {
-                HideInCutscene = hideInCutscene;
                 Save();
             }
 
