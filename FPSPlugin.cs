@@ -29,7 +29,7 @@ namespace FPSPlugin {
         private ImFontPtr font;
         private float maxSeenFps;
 
-        public string Location { get; private set; } = Assembly.GetExecutingAssembly().Location;
+        public string AssemblyLocation { get; private set; } = Assembly.GetExecutingAssembly().Location;
 
         public void Dispose() {
             PluginInterface.UiBuilder.OnBuildUi -= this.BuildUI;
@@ -92,7 +92,11 @@ namespace FPSPlugin {
                             fpsText += $"Min:{FormatFpsValue(fpsHistory.Min())}";
                         }
                     }
-
+#if DEBUG
+                    if (!string.IsNullOrEmpty(PluginConfig.TestText)) {
+                        fpsText = PluginConfig.TestText;
+                    }
+#endif
                     windowSize = Vector2.Zero;
                 }
 
@@ -149,8 +153,12 @@ namespace FPSPlugin {
         }
 
         private void BuildFont() {
-            var fontFile = Path.Combine(Path.GetDirectoryName(Location), "font.ttf");
-
+            var dirName = Path.GetDirectoryName(AssemblyLocation);
+            if (string.IsNullOrEmpty(dirName)) {
+                fontLoadFailed = true;
+                return;
+            }
+            var fontFile = Path.Combine(dirName, "font.ttf");
             fontBuilt = false;
             if (File.Exists(fontFile)) {
                 try {
@@ -191,16 +199,16 @@ namespace FPSPlugin {
             if (!PluginConfig.Enable || string.IsNullOrEmpty(fpsText)) return;
 
             ImGui.SetNextWindowBgAlpha(PluginConfig.Alpha);
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, new Vector2(4));
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, PluginConfig.WindowPadding);
             ImGui.PushStyleVar(ImGuiStyleVar.FramePadding, Vector2.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.ItemSpacing, Vector2.Zero);
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
-            ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, 0);
+            ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, PluginConfig.WindowCornerRounding);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, Vector2.Zero);
-            var flags = ImGuiWindowFlags.NoResize | ImGuiWindowFlags.NoTitleBar | ImGuiWindowFlags.NoCollapse | ImGuiWindowFlags.NoScrollbar;
+            var flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoFocusOnAppearing;
 
             if (PluginConfig.Locked) {
-                flags |= ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoMove;
+                flags |= ImGuiWindowFlags.NoMouseInputs | ImGuiWindowFlags.NoMove | ImGuiWindowFlags.NoBringToFrontOnFocus;
             }
 
             if (fontBuilt) ImGui.PushFont(font);
