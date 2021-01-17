@@ -2,10 +2,31 @@
 using Dalamud.Plugin;
 using ImGuiNET;
 using System;
+using System.ComponentModel;
+using System.Diagnostics;
 using System.Numerics;
 using System.Reflection;
 
 namespace FPSPlugin {
+
+    public enum FPSPluginFont {
+        [Description("Dalamud Default")]
+        DalamudDefault,
+        
+        [Description("Default (font.ttf)")]
+        PluginDefault,
+    }
+
+    public static class EnumExtensions {
+        public static string Description(this FPSPluginFont value)
+        {
+            var fi = value.GetType().GetField(value.ToString());
+            var attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
+            return attributes.Length > 0 ? attributes[0].Description : value.ToString();
+        }
+    }
+    
+    
     public class FPSPluginConfig : IPluginConfiguration {
         [NonSerialized] private DalamudPluginInterface pluginInterface;
         [NonSerialized] private FPSPlugin plugin;
@@ -21,6 +42,8 @@ namespace FPSPlugin {
         public bool ShowMinimum;
         public bool MultiLine;
 
+        public FPSPluginFont Font = FPSPluginFont.PluginDefault;
+        
         public float Alpha = 0.5f;
         public float FontSize = 16;
         public float WindowCornerRounding;
@@ -46,6 +69,8 @@ namespace FPSPlugin {
             pluginInterface.SavePluginConfig(this);
         }
 
+
+        
         public bool DrawConfigUI() {
             var drawConfig = true;
             var windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
@@ -66,6 +91,19 @@ namespace FPSPlugin {
 
             if (ImGui.TreeNode("Style Options###fpsPluginStyleOptions")) {
                 changed |= ImGui.SliderFloat("Background Opacity##fpsPluginOpacitySetting", ref Alpha, 0, 1);
+
+                if (ImGui.BeginCombo("Font##fpsPluginFontSelect", this.Font.Description())) {
+                    foreach (var v in (FPSPluginFont[]) Enum.GetValues(typeof(FPSPluginFont))) {
+                        if (ImGui.Selectable($"{v.Description()}##fpsPluginFont_{v}")) {
+                            this.Font = v;
+                            changed = true;
+                            FontChangeTime = DateTime.Now.Ticks;
+                        }
+                    }
+                    ImGui.EndCombo();
+                }
+                
+                 
                 if (ImGui.SliderFloat("Font Size##fpsPluginFontSizeSetting", ref FontSize, 6, 90, "%.0f")) {
                     FontChangeTime = DateTime.Now.Ticks;
                     changed = true;
@@ -81,9 +119,13 @@ namespace FPSPlugin {
 
                 ImGui.TreePop();
             }
+           
             
 #if DEBUG
-            ImGui.InputText("Test Text", ref TestText, 100, ImGuiInputTextFlags.Multiline);
+            if (ImGui.TreeNode("Debug##fpsPlugin")) {
+                ImGui.InputText("Test Text", ref TestText, 100, ImGuiInputTextFlags.Multiline);
+                ImGui.TreePop();
+            }
 #endif
 
             ImGui.Separator();
@@ -97,7 +139,21 @@ namespace FPSPlugin {
                 if (HistorySnapshotCount > 10000) HistorySnapshotCount = 10000;
                 Save();
             }
-
+            
+            ImGui.SameLine();
+            
+            ImGui.PushStyleColor(ImGuiCol.Button, 0xFF5E5BFF);
+            ImGui.PushStyleColor(ImGuiCol.ButtonActive, 0xFF5E5BAA);
+            ImGui.PushStyleColor(ImGuiCol.ButtonHovered, 0xFF5E5BDD);
+            var c = ImGui.GetCursorPos();
+            ImGui.SetCursorPosX(ImGui.GetWindowContentRegionWidth() - ImGui.CalcTextSize("Support on Ko-fi").X - ImGui.GetStyle().FramePadding.X * 2);
+            if (ImGui.Button("Support on Ko-fi")) {
+                Process.Start("https://ko-fi.com/Caraxi");
+            }
+            ImGui.SetCursorPos(c);
+            ImGui.PopStyleColor(3);
+            
+            
             ImGui.End();
 
             return drawConfig;

@@ -1,8 +1,7 @@
-name: Build
+name: Build FPSPlugin
 on:
   push:
-    branches: 'master'
-  pull_request:
+    branches: 'main'
 jobs:
   build:
     if: "! contains(toJSON(github.event.commits.*.message), '[skip-ci]')"
@@ -26,17 +25,15 @@ jobs:
         run: |
           Invoke-WebRequest -Uri https://goaaats.github.io/ffxiv/tools/launcher/addons/Hooks/latest.zip -OutFile latest.zip
           Expand-Archive -Force latest.zip "$env:AppData\XIVLauncher\addon\Hooks\"
-      
-      - name: Set Version
-        uses: datamonsters/replace-action@v2
-        with:
-          files: "./FPSPlugin.csproj"
-          replacements: "{{GITHUB_RUN_NUMBER}}=${{ github.run_number }}"
 
       - name: Build
-        run: msbuild FPSPlugin.sln /p:Configuration=Canary
-      
+        run: msbuild FPSPlugin.sln /p:Configuration=Release
+
+      - name: Extract Publish
+        run: |
+          Expand-Archive -Force ./Publish/latest.zip ./Artifact
+          
       - name: Upload Build Artifact
         uses: actions/upload-artifact@v2.2.1
         with:
-          path: ./Publish/*
+          path: ./Artifact/*

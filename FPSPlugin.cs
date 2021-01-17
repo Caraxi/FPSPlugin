@@ -111,8 +111,7 @@ namespace FPSPlugin {
                 ShowInHelp = true
             });
         }
-
-
+        
         public void OnConfigCommandHandler(object a, object b) {
             if (b is string s) {
                 switch (s.ToLower()) {
@@ -152,13 +151,16 @@ namespace FPSPlugin {
             PluginInterface.CommandManager.RemoveHandler("/pfps");
         }
 
+        private string GetFontPath(FPSPluginFont font) {
+            if (string.IsNullOrEmpty(AssemblyLocation)) return null;
+            return font switch {
+                FPSPluginFont.DalamudDefault => Path.Combine(Assembly.GetAssembly(typeof(DalamudPluginInterface)).Location, "..", "UIRes", "NotoSansCJKjp-Medium.otf"),
+                _ => Path.Combine(Path.GetDirectoryName(AssemblyLocation) ?? "", "font.ttf"),
+            };
+        }
+        
         private void BuildFont() {
-            var dirName = Path.GetDirectoryName(AssemblyLocation);
-            if (string.IsNullOrEmpty(dirName)) {
-                fontLoadFailed = true;
-                return;
-            }
-            var fontFile = Path.Combine(dirName, "font.ttf");
+            var fontFile = GetFontPath(PluginConfig.Font);
             fontBuilt = false;
             if (File.Exists(fontFile)) {
                 try {
@@ -191,6 +193,7 @@ namespace FPSPlugin {
             if (PluginConfig.FontChangeTime > 0) {
                 if (DateTime.Now.Ticks - 10000000 > PluginConfig.FontChangeTime) {
                     PluginConfig.FontChangeTime = 0;
+                    fontLoadFailed = false;
                     windowSize = Vector2.Zero;
                     ReloadFont();
                 }
@@ -215,7 +218,6 @@ namespace FPSPlugin {
             if (windowSize == Vector2.Zero) {
                 windowSize = ImGui.CalcTextSize(fpsText) + (ImGui.GetStyle().WindowPadding * 2);
             }
-
             
             ImGui.SetNextWindowSize(windowSize, ImGuiCond.Always);
             ImGui.Begin("FPS##fpsPluginMonitorWindow", flags);

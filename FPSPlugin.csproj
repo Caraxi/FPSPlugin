@@ -1,10 +1,9 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
     <PropertyGroup Label="Target">
         <PlatformTarget>AnyCPU</PlatformTarget>
         <TargetFramework>net472</TargetFramework>
         <LangVersion>8.0</LangVersion>
         <Platforms>AnyCPU;x64</Platforms>
-        <Configurations>Debug;Release;Canary</Configurations>
     </PropertyGroup>
     <PropertyGroup Label="Build">
         <OutputType>Library</OutputType>
@@ -14,53 +13,39 @@
         <DebugType>Portable</DebugType>
         <DocumentationFile></DocumentationFile>
     </PropertyGroup>
-    <PropertyGroup Label="Feature" Condition="'$(Configuration)'!='Canary'">
+    <PropertyGroup Label="Feature">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Version>1.4.1.0</Version>
-    </PropertyGroup>
-	<PropertyGroup Label="Feature" Condition="'$(Configuration)'=='Canary'">
-        <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Version>1.4.1.{{GITHUB_RUN_NUMBER}}</Version>
+        <Version>1.4.2.0</Version>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
-        <PathMap>$(AppOutputBase)=C:\ffxiv\repo\FPSPlugin\FPSPlugin</PathMap>
+        <PathMap>$(AppOutputBase)=F:\repo\FPSPlugin\FPSPlugin</PathMap>
         <Deterministic>true</Deterministic>
-    </PropertyGroup>
-    <PropertyGroup Condition="'$(Configuration)'=='Canary'">
-      <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
-      <PathMap>$(AppOutputBase)=C:\ffxiv\repo\FPSPlugin\FPSPlugin</PathMap>
-      <Deterministic>true</Deterministic>
     </PropertyGroup>
     <PropertyGroup>
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
     </PropertyGroup>
     <ItemGroup>
-      <Compile Remove="Publish\**" />
-      <EmbeddedResource Remove="Publish\**" />
-      <None Remove="Publish\**" />
-    </ItemGroup>
-    <ItemGroup>
-        <Reference Include="Dalamud" Private="false">
-          <HintPath>$(AppData)\XIVLauncher\addon\Hooks\Dalamud.dll</HintPath>
+        <Reference Include="Dalamud">
+            <Private>false</Private>
+            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\Dalamud.dll</HintPath>
         </Reference>
-        <Reference Include="ImGui.NET" Private="false">
-          <HintPath>$(AppData)\XIVLauncher\addon\Hooks\ImGui.NET.dll</HintPath>
+        <Reference Include="ImGui.NET">
+            <Private>false</Private>
+            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\ImGui.NET.dll</HintPath>
         </Reference>
-        <Reference Include="ImGuiScene" Private="false">
-          <HintPath>$(AppData)\XIVLauncher\addon\Hooks\ImGuiScene.dll</HintPath>
+        <Reference Include="ImGuiScene">
+            <Private>false</Private>
+            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\ImGuiScene.dll</HintPath>
         </Reference>
     </ItemGroup>
     <ItemGroup>
-      <None Update="font.ttf">
-        <CopyToOutputDirectory>Always</CopyToOutputDirectory>
-      </None>
+        <None Update="font.ttf">
+            <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+        </None>
     </ItemGroup>
-	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
-		<Exec Command="powershell -Command &quot;New-Item -ItemType Directory -Force -Path '$(ProjectDir)Publish'; $a=Get-Item '$(TargetPath)'; $jsonTemplate=Get-Content '$(ProjectDir)\$(ProjectName).template.json' | ConvertFrom-Json; $jsonTemplate.AssemblyVersion=$a.VersionInfo.FileVersion; $jsonTemplate.Description = $jsonTemplate.Description -join '\n'; ($jsonTemplate | ConvertTo-Json).Replace('\\n','\n') | Out-File '$(ProjectDir)\Publish\$(ProjectName).json' -Encoding utf8;Compress-Archive -Path '$(ProjectDir)\Publish\$(ProjectName).json','$(TargetDir)\*' -DestinationPath '$(ProjectDir)Publish\latest.zip' -Force&quot;" />
-	</Target>
-	<Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Canary'">
-		<Exec Command="powershell -Command &quot;New-Item -ItemType Directory -Force -Path '$(ProjectDir)Publish'; $a=Get-Item '$(TargetPath)'; $jsonTemplate=Get-Content '$(ProjectDir)\$(ProjectName).template.json' | ConvertFrom-Json; $jsonTemplate.AssemblyVersion=$a.VersionInfo.FileVersion; $jsonTemplate.Description = $jsonTemplate.Description -join '\n'; ($jsonTemplate | ConvertTo-Json).Replace('\\n','\n') | Out-File '$(ProjectDir)\Publish\$(ProjectName).json' -Encoding utf8;Copy-Item -Force -Recurse -Verbose '$(TargetDir)\*' -Destination '$(ProjectDir)\Publish'&quot;" />
-	</Target>
+    <Target Name="PostBuild" AfterTargets="PostBuildEvent" Condition="'$(Configuration)'=='Release'">
+        <Exec Command="powershell -Command &quot;New-Item -ItemType Directory -Force -Path '$(ProjectDir)Publish'; $a=Get-Item '$(TargetDir)FPSPlugin.dll'; $jsonTemplate=Get-Content '$(ProjectDir)\$(ProjectName).template.json' | ConvertFrom-Json; $jsonTemplate.AssemblyVersion=$a.VersionInfo.FileVersion; $jsonTemplate.Description = $jsonTemplate.Description -join '\n'; ($jsonTemplate | ConvertTo-Json).Replace('\\n','\n') | Out-File '$(ProjectDir)\Publish\$(ProjectName).json' -Encoding utf8;Compress-Archive -Path '$(ProjectDir)\Publish\$(ProjectName).json','$(TargetDir)\*' -DestinationPath '$(ProjectDir)Publish\latest.zip' -Force&quot;" />
+    </Target>
 </Project>

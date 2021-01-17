@@ -7,18 +7,12 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "FPSPlugin", "FPSPlugin.cspr
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
-		Canary|Any CPU = Canary|Any CPU
-		Canary|x64 = Canary|x64
 		Debug|Any CPU = Debug|Any CPU
 		Debug|x64 = Debug|x64
 		Release|Any CPU = Release|Any CPU
 		Release|x64 = Release|x64
 	EndGlobalSection
 	GlobalSection(ProjectConfigurationPlatforms) = postSolution
-		{433DC053-D05B-4C71-88D7-2EF346B51536}.Canary|Any CPU.ActiveCfg = Canary|Any CPU
-		{433DC053-D05B-4C71-88D7-2EF346B51536}.Canary|Any CPU.Build.0 = Canary|Any CPU
-		{433DC053-D05B-4C71-88D7-2EF346B51536}.Canary|x64.ActiveCfg = Canary|x64
-		{433DC053-D05B-4C71-88D7-2EF346B51536}.Canary|x64.Build.0 = Canary|x64
 		{433DC053-D05B-4C71-88D7-2EF346B51536}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{433DC053-D05B-4C71-88D7-2EF346B51536}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{433DC053-D05B-4C71-88D7-2EF346B51536}.Debug|x64.ActiveCfg = Debug|x64
