@@ -6,5 +6,5 @@
   "AssemblyVersion": "version",
   "RepoUrl": "https://github.com/Caraxi/FPSPlugin",
   "ApplicableVersion": "any",
-  "DalamudApiLevel": 2
+  "DalamudApiLevel": 3
 }

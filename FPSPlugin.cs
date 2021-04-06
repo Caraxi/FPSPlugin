@@ -154,7 +154,7 @@ namespace FPSPlugin {
         private string GetFontPath(FPSPluginFont font) {
             if (string.IsNullOrEmpty(AssemblyLocation)) return null;
             return font switch {
-                FPSPluginFont.DalamudDefault => Path.Combine(Assembly.GetAssembly(typeof(DalamudPluginInterface)).Location, "..", "UIRes", "NotoSansCJKjp-Medium.otf"),
+                FPSPluginFont.DalamudDefault => Path.Combine(PluginInterface.DalamudAssetDirectory.FullName, "UIRes", "NotoSansCJKjp-Medium.otf"),
                 _ => Path.Combine(Path.GetDirectoryName(AssemblyLocation) ?? "", "font.ttf"),
             };
         }
