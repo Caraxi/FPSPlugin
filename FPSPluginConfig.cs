@@ -1,5 +1,4 @@
 ﻿using Dalamud.Configuration;
-using Dalamud.Plugin;
 using ImGuiNET;
 using System;
 using System.ComponentModel;
@@ -21,6 +20,7 @@ namespace FPSPlugin {
         public static string Description(this FPSPluginFont value)
         {
             var fi = value.GetType().GetField(value.ToString());
+            if (fi is null) return $"{value}";
             var attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
             return attributes.Length > 0 ? attributes[0].Description : value.ToString();
         }
@@ -28,7 +28,6 @@ namespace FPSPlugin {
     
     
     public class FPSPluginConfig : IPluginConfiguration {
-        [NonSerialized] private DalamudPluginInterface pluginInterface;
         [NonSerialized] private FPSPlugin plugin;
         [NonSerialized] public long FontChangeTime = DateTime.Now.Ticks;
         [NonSerialized] public string TestText = string.Empty;
@@ -60,17 +59,14 @@ namespace FPSPlugin {
             }
         }
 
-        public void Init(FPSPlugin plugin, DalamudPluginInterface pluginInterface) {
+        public void Init(FPSPlugin plugin) {
             this.plugin = plugin;
-            this.pluginInterface = pluginInterface;
         }
 
         public void Save() {
-            pluginInterface.SavePluginConfig(this);
+            FPSPlugin.PluginInterface.SavePluginConfig(this);
         }
 
-
-        
         public bool DrawConfigUI() {
             var drawConfig = true;
             var windowFlags = ImGuiWindowFlags.AlwaysAutoResize | ImGuiWindowFlags.NoCollapse;
@@ -119,14 +115,6 @@ namespace FPSPlugin {
 
                 ImGui.TreePop();
             }
-           
-            
-#if DEBUG
-            if (ImGui.TreeNode("Debug##fpsPlugin")) {
-                ImGui.InputText("Test Text", ref TestText, 100, ImGuiInputTextFlags.Multiline);
-                ImGui.TreePop();
-            }
-#endif
 
             ImGui.Separator();
             if (ImGui.Button("Restore Default##fpsPluginDefaultsButton")) {

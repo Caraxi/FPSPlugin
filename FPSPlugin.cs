@@ -1,5 +1,4 @@
-﻿using Dalamud.Game.Internal;
-using Dalamud.Plugin;
+﻿using Dalamud.Plugin;
 using ImGuiNET;
 using System;
 using System.Collections.Generic;
@@ -9,12 +8,14 @@ using System.Linq;
 using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
-using Dalamud.Hooking;
+using Dalamud.Game;
+using Dalamud.Game.Command;
+using Dalamud.IoC;
+using Dalamud.Logging;
 
 namespace FPSPlugin {
     public class FPSPlugin : IDalamudPlugin {
         public string Name => "FPS Plugin";
-        public DalamudPluginInterface PluginInterface { get; private set; }
         public FPSPluginConfig PluginConfig { get; private set; }
 
         private bool drawConfigWindow;
@@ -29,33 +30,34 @@ namespace FPSPlugin {
         private ImFontPtr font;
         private float maxSeenFps;
 
-        public string AssemblyLocation { get; private set; } = Assembly.GetExecutingAssembly().Location;
+        [PluginService] public static  CommandManager CommandManager { get; private set; } = null!;
+        [PluginService] public static  Framework Framework { get; private set; } = null!;
+        [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
 
         public void Dispose() {
-            PluginInterface.UiBuilder.OnBuildUi -= this.BuildUI;
-            PluginInterface.UiBuilder.OnBuildFonts -= this.BuildFont;
-            PluginInterface.UiBuilder.OnOpenConfigUi -= this.OnConfigCommandHandler;
-            PluginInterface.Framework.OnUpdateEvent -= this.OnFrameworkUpdate;
+            PluginInterface.UiBuilder.Draw -= this.BuildUI;
+            PluginInterface.UiBuilder.BuildFonts -= this.BuildFont;
+            PluginInterface.UiBuilder.OpenConfigUi -= this.OpenConfigUi;
+            Framework.Update -= this.OnFrameworkUpdate;
             PluginInterface.UiBuilder.RebuildFonts();
             fpsHistoryInterval?.Stop();
             RemoveCommands();
             PluginInterface.Dispose();
         }
 
-        public void Initialize(DalamudPluginInterface pluginInterface) {
-            this.PluginInterface = pluginInterface;
-            this.PluginConfig = (FPSPluginConfig) pluginInterface.GetPluginConfig() ?? new FPSPluginConfig();
-            this.PluginConfig.Init(this, pluginInterface);
+        public FPSPlugin() {
+            this.PluginConfig = (FPSPluginConfig) PluginInterface.GetPluginConfig() ?? new FPSPluginConfig();
+            this.PluginConfig.Init(this);
             fpsText = string.Empty;
             fpsHistory = new List<float>();
 
             fpsHistoryInterval = new Stopwatch();
             fpsHistoryInterval.Start();
             SetupCommands();
-            PluginInterface.UiBuilder.OnBuildUi += this.BuildUI;
-            PluginInterface.UiBuilder.OnOpenConfigUi += OnConfigCommandHandler;
-            PluginInterface.Framework.OnUpdateEvent += OnFrameworkUpdate;
-            PluginInterface.UiBuilder.OnBuildFonts += this.BuildFont;
+            PluginInterface.UiBuilder.Draw += this.BuildUI;
+            PluginInterface.UiBuilder.OpenConfigUi += this.OpenConfigUi;
+            Framework.Update += OnFrameworkUpdate;
+            PluginInterface.UiBuilder.BuildFonts += this.BuildFont;
         }
 
         private string FormatFpsValue(float value) {
@@ -70,7 +72,7 @@ namespace FPSPlugin {
                 if (fpsHistoryInterval.ElapsedMilliseconds > 1000) {
                     fpsHistoryInterval.Restart();
                     // FPS values are only updated in memory once per second.
-                    var fps = Marshal.PtrToStructure<float>(PluginInterface.Framework.Address.BaseAddress + 0x165C);
+                    var fps = Marshal.PtrToStructure<float>(Framework.Address.BaseAddress + 0x165C);
                     var windowInactive = Marshal.ReadByte(framework.Address.BaseAddress, 0x1668) == 1;
                     if (fps > maxSeenFps) maxSeenFps = fps;
 
@@ -106,15 +108,19 @@ namespace FPSPlugin {
         }
 
         public void SetupCommands() {
-            PluginInterface.CommandManager.AddHandler("/pfps", new Dalamud.Game.Command.CommandInfo(OnConfigCommandHandler) {
+            CommandManager.AddHandler("/pfps", new Dalamud.Game.Command.CommandInfo(OnConfigCommandHandler) {
                 HelpMessage = $"Open config window for {this.Name}. /pfps [show|hide|toggle|reset]",
                 ShowInHelp = true
             });
         }
-        
-        public void OnConfigCommandHandler(object a, object b) {
-            if (b is string s) {
-                switch (s.ToLower()) {
+
+        private void OpenConfigUi() {
+            OnConfigCommandHandler(null, null);
+        }
+
+        public void OnConfigCommandHandler(string command, string args) {
+            if (args != null) {
+                switch (args.ToLower()) {
                     case "t":
                     case "toggle": {
                         PluginConfig.Enable = !PluginConfig.Enable;
@@ -148,14 +154,13 @@ namespace FPSPlugin {
         }
 
         public void RemoveCommands() {
-            PluginInterface.CommandManager.RemoveHandler("/pfps");
+            CommandManager.RemoveHandler("/pfps");
         }
 
         private string GetFontPath(FPSPluginFont font) {
-            if (string.IsNullOrEmpty(AssemblyLocation)) return null;
             return font switch {
                 FPSPluginFont.DalamudDefault => Path.Combine(PluginInterface.DalamudAssetDirectory.FullName, "UIRes", "NotoSansCJKjp-Medium.otf"),
-                _ => Path.Combine(Path.GetDirectoryName(AssemblyLocation) ?? "", "font.ttf"),
+                _ => Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location) ?? "", "font.ttf"),
             };
         }
         
