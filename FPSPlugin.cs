@@ -72,7 +72,7 @@ namespace FPSPlugin {
                 if (fpsHistoryInterval.ElapsedMilliseconds > 1000) {
                     fpsHistoryInterval.Restart();
                     // FPS values are only updated in memory once per second.
-                    var fps = Marshal.PtrToStructure<float>(Framework.Address.BaseAddress + 0x165C);
+                    var fps = Marshal.PtrToStructure<float>(Framework.Address.BaseAddress + 0x17C4);
                     var windowInactive = Marshal.ReadByte(framework.Address.BaseAddress, 0x1668) == 1;
                     if (fps > maxSeenFps) maxSeenFps = fps;
 
