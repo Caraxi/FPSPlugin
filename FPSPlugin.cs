@@ -76,7 +76,7 @@ namespace FPSPlugin {
                     var windowInactive = Marshal.ReadByte(framework.Address.BaseAddress, 0x17D0) == 1;
                     if (fps > maxSeenFps) maxSeenFps = fps;
 
-                    fpsText = $"FPS:{FormatFpsValue(fps)}";
+                    fpsText = (PluginConfig.ShowLabel ? "FPS:" : "") + FormatFpsValue(fps);
                     if (PluginConfig.ShowAverage || PluginConfig.ShowMinimum) {
                         if (!windowInactive) fpsHistory.Add(fps);
 
