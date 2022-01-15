@@ -49,6 +49,7 @@ namespace FPSPlugin {
         public float WindowCornerRounding;
         
         public int HistorySnapshotCount = 300;
+        public int BorderSize = -1;
 
         public Vector4 Colour = new Vector4(0, 1, 1, 1);
         public Vector2 WindowPadding = new Vector2(4, 4);
@@ -114,6 +115,8 @@ namespace FPSPlugin {
 
                 changed |= ImGui.SliderFloat("Corner Rounding###fpsPluginCornerRounding", ref WindowCornerRounding, 0f, 20f, "%.0f");
                 changed |= ImGui.SliderFloat2("Window Padding###fpsPluginWindowPadding", ref WindowPadding, 0f, 20f, "%.0f");
+
+                changed |= ImGui.SliderInt("Border Width###fpsPluginBorderWidth", ref BorderSize, -1, 3, BorderSize < 0 ? "Dalamud Default" : $"{BorderSize}");
 
                 ImGui.TreePop();
             }

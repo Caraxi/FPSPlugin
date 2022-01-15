@@ -217,6 +217,11 @@ namespace FPSPlugin {
             ImGui.PushStyleVar(ImGuiStyleVar.FrameRounding, 0);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowRounding, PluginConfig.WindowCornerRounding);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowMinSize, Vector2.Zero);
+            var stylePopCount = 6;
+            if (PluginConfig.BorderSize >= 0) {
+                ImGui.PushStyleVar(ImGuiStyleVar.WindowBorderSize, PluginConfig.BorderSize);
+                stylePopCount++;
+            }
             var flags = ImGuiWindowFlags.NoDecoration | ImGuiWindowFlags.NoFocusOnAppearing;
 
             if (PluginConfig.Locked) {
@@ -232,7 +237,7 @@ namespace FPSPlugin {
             ImGui.Begin("FPS##fpsPluginMonitorWindow", flags);
             ImGui.TextColored(PluginConfig.Colour, fpsText);
             ImGui.End();
-            ImGui.PopStyleVar(6);
+            ImGui.PopStyleVar(stylePopCount);
             if (fontBuilt) ImGui.PopFont();
         }
     }
