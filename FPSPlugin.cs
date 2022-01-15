@@ -76,7 +76,9 @@ namespace FPSPlugin {
                     var windowInactive = Marshal.ReadByte(framework.Address.BaseAddress, 0x17D0) == 1;
                     if (fps > maxSeenFps) maxSeenFps = fps;
 
-                    fpsText = $"FPS:{FormatFpsValue(fps)}";
+                    fpsText = string.Empty;
+                    if (!PluginConfig.NoLabels) fpsText += "FPS:";
+                    fpsText += $"{FormatFpsValue(fps)}";
                     if (PluginConfig.ShowAverage || PluginConfig.ShowMinimum) {
                         if (!windowInactive) fpsHistory.Add(fps);
 
@@ -86,12 +88,14 @@ namespace FPSPlugin {
 
                         if (PluginConfig.ShowAverage && fpsHistory.Count > 0) {
                             fpsText += PluginConfig.MultiLine ? "\n" : " / ";
-                            fpsText += $"Avg:{FormatFpsValue(fpsHistory.Average())}";
+                            if (!PluginConfig.NoLabels) fpsText += "Avg:";
+                            fpsText += $"{FormatFpsValue(fpsHistory.Average())}";
                         }
 
                         if (PluginConfig.ShowMinimum && fpsHistory.Count > 0) {
                             fpsText += PluginConfig.MultiLine ? "\n" : " / ";
-                            fpsText += $"Min:{FormatFpsValue(fpsHistory.Min())}";
+                            if (!PluginConfig.NoLabels) fpsText += "Min:";
+                            fpsText += $"{FormatFpsValue(fpsHistory.Min())}";
                         }
                     }
 #if DEBUG
