@@ -41,6 +41,7 @@ namespace FPSPlugin {
         public bool ShowMinimum;
         public bool MultiLine;
         public bool NoLabels;
+        public bool UseDtr;
 
         public FPSPluginFont Font = FPSPluginFont.PluginDefault;
         
@@ -80,15 +81,16 @@ namespace FPSPlugin {
             ImGui.SameLine();
             ImGui.TextDisabled("/pfps [show|hide|toggle]");
 
-            changed |= ImGui.Checkbox("Lock Display##fpsPluginLockSetting", ref Locked);
+            changed |= ImGui.Checkbox("Use Server Info Bar##fpsPluginUseDTR", ref UseDtr);
+            if (!UseDtr) changed |= ImGui.Checkbox("Lock Display##fpsPluginLockSetting", ref Locked);
             changed |= ImGui.Checkbox("Show Decimals##fpsPluginDecimalsSetting", ref ShowDecimals);
             changed |= ImGui.Checkbox("Show Average##fpsPluginShowAverageSetting", ref ShowAverage);
             changed |= ImGui.Checkbox("Show Minimum##fpsPluginShowMinimumSetting", ref ShowMinimum);
             changed |= ImGui.Checkbox("Hide Labels##fpsPluginNoLabelsSetting", ref NoLabels);
-            changed |= ImGui.Checkbox("Multiline##fpsPluginMultiline", ref MultiLine);
+            if (!UseDtr) changed |= ImGui.Checkbox("Multiline##fpsPluginMultiline", ref MultiLine);
             changed |= ImGui.InputInt("Tracking Timespan (Seconds)", ref HistorySnapshotCount, 1, 60);
 
-            if (ImGui.TreeNode("Style Options###fpsPluginStyleOptions")) {
+            if (!UseDtr && ImGui.TreeNode("Style Options###fpsPluginStyleOptions")) {
                 changed |= ImGui.SliderFloat("Background Opacity##fpsPluginOpacitySetting", ref Alpha, 0, 1);
 
                 if (ImGui.BeginCombo("Font##fpsPluginFontSelect", this.Font.Description())) {

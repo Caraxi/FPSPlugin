@@ -10,6 +10,7 @@ using System.Reflection;
 using System.Runtime.InteropServices;
 using Dalamud.Game;
 using Dalamud.Game.Command;
+using Dalamud.Game.Gui.Dtr;
 using Dalamud.IoC;
 using Dalamud.Logging;
 
@@ -24,6 +25,7 @@ namespace FPSPlugin {
         private Stopwatch fpsHistoryInterval;
         private string fpsText;
         private Vector2 windowSize = Vector2.One;
+        private DtrBarEntry dtrEntry;
 
         private bool fontBuilt;
         private bool fontLoadFailed;
@@ -33,6 +35,7 @@ namespace FPSPlugin {
         [PluginService] public static  CommandManager CommandManager { get; private set; } = null!;
         [PluginService] public static  Framework Framework { get; private set; } = null!;
         [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+        [PluginService] public static DtrBar DtrBar { get; private set; } = null!;
 
         public void Dispose() {
             PluginInterface.UiBuilder.Draw -= this.BuildUI;
@@ -41,8 +44,8 @@ namespace FPSPlugin {
             Framework.Update -= this.OnFrameworkUpdate;
             PluginInterface.UiBuilder.RebuildFonts();
             fpsHistoryInterval?.Stop();
+            dtrEntry?.Dispose();
             RemoveCommands();
-            PluginInterface.Dispose();
         }
 
         public FPSPlugin() {
@@ -69,6 +72,14 @@ namespace FPSPlugin {
         private void OnFrameworkUpdate(Framework framework) {
             try {
                 if (!(fontBuilt || fontLoadFailed)) return;
+                if (PluginConfig.UseDtr && fpsText != null) {
+                    dtrEntry ??= DtrBar.Get("FPS Display");
+                    dtrEntry.Shown = PluginConfig.Enable;
+                    dtrEntry.Text = fpsText;
+                } else {
+                    if (dtrEntry != null) dtrEntry.Shown = false;
+                }
+                
                 if (fpsHistoryInterval.ElapsedMilliseconds > 1000) {
                     fpsHistoryInterval.Restart();
                     // FPS values are only updated in memory once per second.
@@ -87,13 +98,13 @@ namespace FPSPlugin {
                         }
 
                         if (PluginConfig.ShowAverage && fpsHistory.Count > 0) {
-                            fpsText += PluginConfig.MultiLine ? "\n" : " / ";
+                            fpsText += PluginConfig.MultiLine && !PluginConfig.UseDtr ? "\n" : " / ";
                             if (!PluginConfig.NoLabels) fpsText += "Avg:";
                             fpsText += $"{FormatFpsValue(fpsHistory.Average())}";
                         }
 
                         if (PluginConfig.ShowMinimum && fpsHistory.Count > 0) {
-                            fpsText += PluginConfig.MultiLine ? "\n" : " / ";
+                            fpsText += PluginConfig.MultiLine && !PluginConfig.UseDtr ? "\n" : " / ";
                             if (!PluginConfig.NoLabels) fpsText += "Min:";
                             fpsText += $"{FormatFpsValue(fpsHistory.Min())}";
                         }
@@ -208,7 +219,7 @@ namespace FPSPlugin {
                 }
             }
 
-            if (!PluginConfig.Enable || string.IsNullOrEmpty(fpsText)) return;
+            if (!PluginConfig.Enable || PluginConfig.UseDtr || string.IsNullOrEmpty(fpsText)) return;
 
             ImGui.SetNextWindowBgAlpha(PluginConfig.Alpha);
             ImGui.PushStyleVar(ImGuiStyleVar.WindowPadding, PluginConfig.WindowPadding);
