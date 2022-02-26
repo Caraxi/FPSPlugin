@@ -9,7 +9,6 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Dalamud.Game;
-using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui.Dtr;
 using Dalamud.Interface;
@@ -38,7 +37,6 @@ namespace FPSPlugin {
         [PluginService] public static  CommandManager CommandManager { get; private set; } = null!;
         [PluginService] public static  Framework Framework { get; private set; } = null!;
         [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
-        [PluginService] public static KeyState KeyState { get; private set; } = null!;
         [PluginService] public static DtrBar DtrBar { get; private set; } = null!;
 
         public void Dispose() {
@@ -227,10 +225,6 @@ namespace FPSPlugin {
                     ImGui.BeginTooltip();
                     ImGui.Text($"Hovering over FPS DTR Node [{relPos.X}, {relPos.Y}] [{nodePosX}, {nodePosY}]-[{nodeMaxX}, {nodeMaxY}]");
                     ImGui.EndTooltip();
-
-                    if (KeyState.) {
-                        drawConfigWindow = true;
-                    }
                     textNode->AtkResNode.AddRed = 2000;
                 } else {
                     textNode->AtkResNode.AddRed = 0;
