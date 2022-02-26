@@ -31,6 +31,10 @@
             <Private>false</Private>
             <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\Dalamud.dll</HintPath>
         </Reference>
+        <Reference Include="FFXIVClientStructs">
+            <Private>false</Private>
+            <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\FFXIVClientStructs.dll</HintPath>
+        </Reference>
         <Reference Include="ImGui.NET">
             <Private>false</Private>
             <HintPath>$(AppData)\XIVLauncher\addon\Hooks\dev\ImGui.NET.dll</HintPath>

@@ -9,13 +9,16 @@ using System.Numerics;
 using System.Reflection;
 using System.Runtime.InteropServices;
 using Dalamud.Game;
+using Dalamud.Game.ClientState.Keys;
 using Dalamud.Game.Command;
 using Dalamud.Game.Gui.Dtr;
+using Dalamud.Interface;
 using Dalamud.IoC;
 using Dalamud.Logging;
+using FFXIVClientStructs.FFXIV.Component.GUI;
 
 namespace FPSPlugin {
-    public class FPSPlugin : IDalamudPlugin {
+    public unsafe class FPSPlugin : IDalamudPlugin {
         public string Name => "FPS Plugin";
         public FPSPluginConfig PluginConfig { get; private set; }
 
@@ -35,6 +38,7 @@ namespace FPSPlugin {
         [PluginService] public static  CommandManager CommandManager { get; private set; } = null!;
         [PluginService] public static  Framework Framework { get; private set; } = null!;
         [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
+        [PluginService] public static KeyState KeyState { get; private set; } = null!;
         [PluginService] public static DtrBar DtrBar { get; private set; } = null!;
 
         public void Dispose() {
@@ -69,6 +73,8 @@ namespace FPSPlugin {
             return PluginConfig.ShowDecimals ? $"{value,6:##0.00}" : $"{value,3:##0}";
         }
 
+        public AtkTextNode* textNode;
+        
         private void OnFrameworkUpdate(Framework framework) {
             try {
                 if (!(fontBuilt || fontLoadFailed)) return;
@@ -76,6 +82,8 @@ namespace FPSPlugin {
                     dtrEntry ??= DtrBar.Get("FPS Display");
                     dtrEntry.Shown = PluginConfig.Enable;
                     dtrEntry.Text = fpsText;
+                    var boxed = (Pointer) dtrEntry.GetType().GetProperty("TextNode", BindingFlags.NonPublic | BindingFlags.Instance)?.GetValue(dtrEntry);
+                    textNode = boxed == null ? null : (AtkTextNode*)Pointer.Unbox(boxed);
                 } else {
                     if (dtrEntry != null) dtrEntry.Shown = false;
                 }
@@ -203,6 +211,33 @@ namespace FPSPlugin {
         
         private void BuildUI() {
 
+            if (PluginConfig.UseDtr && textNode != null && textNode->AtkResNode.ParentNode != null) {
+                var mousePos = ImGui.GetMousePos();
+                var viewportPos = ImGui.GetMainViewport().Pos;
+                var relPos = mousePos - viewportPos;
+
+                var nodePosX = textNode->AtkResNode.ParentNode->X + textNode->AtkResNode.X * textNode->AtkResNode.ParentNode->ScaleX;
+                var nodePosY = textNode->AtkResNode.ParentNode->Y + textNode->AtkResNode.Y * textNode->AtkResNode.ParentNode->ScaleY;
+                
+                var nodeMaxX = nodePosX + textNode->AtkResNode.Width * textNode->AtkResNode.ParentNode->ScaleX;
+                var nodeMaxY = nodePosY + textNode->AtkResNode.Height * textNode->AtkResNode.ParentNode->ScaleY;
+
+                if (relPos.X >= nodePosX && relPos.X <= nodeMaxX && relPos.Y >= nodePosY && relPos.Y <= nodeMaxY) {
+                    ImGuiHelpers.ForceNextWindowMainViewport();
+                    ImGui.BeginTooltip();
+                    ImGui.Text($"Hovering over FPS DTR Node [{relPos.X}, {relPos.Y}] [{nodePosX}, {nodePosY}]-[{nodeMaxX}, {nodeMaxY}]");
+                    ImGui.EndTooltip();
+
+                    if (KeyState.) {
+                        drawConfigWindow = true;
+                    }
+                    textNode->AtkResNode.AddRed = 2000;
+                } else {
+                    textNode->AtkResNode.AddRed = 0;
+                }
+            }
+            
+            
             if (!fontBuilt && !fontLoadFailed) {
                 PluginInterface.UiBuilder.RebuildFonts();
                 return;
