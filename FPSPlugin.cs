@@ -88,8 +88,9 @@ namespace FPSPlugin {
                     if (fps > maxSeenFps) maxSeenFps = fps;
 
                     fpsText = string.Empty;
-                    if (!PluginConfig.NoLabels) fpsText += "FPS:";
+                    if (!PluginConfig.NoLabels && !PluginConfig.AlternativeFPSLabel) fpsText += "FPS:";
                     fpsText += $"{FormatFpsValue(fps)}";
+                    if (!PluginConfig.NoLabels && PluginConfig.AlternativeFPSLabel) fpsText += "fps";
                     if (PluginConfig.ShowAverage || PluginConfig.ShowMinimum) {
                         if (!windowInactive) fpsHistory.Add(fps);
 

@@ -41,6 +41,7 @@ namespace FPSPlugin {
         public bool ShowMinimum;
         public bool MultiLine;
         public bool NoLabels;
+        public bool AlternativeFPSLabel;
         public bool UseDtr;
 
         public FPSPluginFont Font = FPSPluginFont.PluginDefault;
@@ -87,6 +88,7 @@ namespace FPSPlugin {
             changed |= ImGui.Checkbox("Show Average##fpsPluginShowAverageSetting", ref ShowAverage);
             changed |= ImGui.Checkbox("Show Minimum##fpsPluginShowMinimumSetting", ref ShowMinimum);
             changed |= ImGui.Checkbox("Hide Labels##fpsPluginNoLabelsSetting", ref NoLabels);
+            if (!NoLabels) changed |= ImGui.Checkbox("Alternative FPS Label##fpsPluginAlternativeFPSLabelSetting", ref AlternativeFPSLabel);
             if (!UseDtr) changed |= ImGui.Checkbox("Multiline##fpsPluginMultiline", ref MultiLine);
             changed |= ImGui.InputInt("Tracking Timespan (Seconds)", ref HistorySnapshotCount, 1, 60);
 
