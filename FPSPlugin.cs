@@ -69,7 +69,8 @@ namespace FPSPlugin {
             return PluginConfig.ShowDecimals ? $"{value,6:##0.00}" : $"{value,3:##0}";
         }
 
-        private void OnFrameworkUpdate(Framework framework) {
+        private unsafe void OnFrameworkUpdate(Framework dFramework) {
+            var framework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance();
             try {
                 if (!(fontBuilt || fontLoadFailed)) return;
                 if (PluginConfig.UseDtr && fpsText != null) {
@@ -83,8 +84,8 @@ namespace FPSPlugin {
                 if (fpsHistoryInterval.ElapsedMilliseconds > 1000) {
                     fpsHistoryInterval.Restart();
                     // FPS values are only updated in memory once per second.
-                    var fps = Marshal.PtrToStructure<float>(Framework.Address.BaseAddress + 0x17C4);
-                    var windowInactive = Marshal.ReadByte(framework.Address.BaseAddress, 0x17D0) == 1;
+                    var fps = framework->FrameRate;
+                    var windowInactive = framework->WindowInactive;
                     if (fps > maxSeenFps) maxSeenFps = fps;
 
                     fpsText = string.Empty;
