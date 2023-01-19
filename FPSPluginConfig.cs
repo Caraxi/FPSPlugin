@@ -42,7 +42,7 @@ namespace FPSPlugin {
         public bool MultiLine;
         public bool NoLabels;
         public bool AlternativeFPSLabel;
-        public bool UseDtr;
+        public bool UseDtr = true;
 
         public FPSPluginFont Font = FPSPluginFont.PluginDefault;
         
@@ -145,7 +145,7 @@ namespace FPSPlugin {
             var c = ImGui.GetCursorPos();
             ImGui.SetCursorPosX(ImGui.GetWindowContentRegionMax().X - ImGui.GetWindowContentRegionMin().X - ImGui.CalcTextSize("Support on Ko-fi").X - ImGui.GetStyle().FramePadding.X * 2);
             if (ImGui.Button("Support on Ko-fi")) {
-                Process.Start("https://ko-fi.com/Caraxi");
+                Process.Start(new ProcessStartInfo {FileName = "https://ko-fi.com/Caraxi", UseShellExecute = true});
             }
             ImGui.SetCursorPos(c);
             ImGui.PopStyleColor(3);
