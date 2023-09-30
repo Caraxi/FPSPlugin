@@ -7,12 +7,9 @@ using System.IO;
 using System.Linq;
 using System.Numerics;
 using System.Reflection;
-using System.Runtime.InteropServices;
-using Dalamud.Game;
-using Dalamud.Game.Command;
 using Dalamud.Game.Gui.Dtr;
 using Dalamud.IoC;
-using Dalamud.Logging;
+using Dalamud.Plugin.Services;
 
 namespace FPSPlugin {
     public class FPSPlugin : IDalamudPlugin {
@@ -32,10 +29,11 @@ namespace FPSPlugin {
         private ImFontPtr font;
         private float maxSeenFps;
 
-        [PluginService] public static  CommandManager CommandManager { get; private set; } = null!;
-        [PluginService] public static  Framework Framework { get; private set; } = null!;
+        [PluginService] public static  ICommandManager CommandManager { get; private set; } = null!;
+        [PluginService] public static  IFramework Framework { get; private set; } = null!;
         [PluginService] public static DalamudPluginInterface PluginInterface { get; private set; } = null!;
-        [PluginService] public static DtrBar DtrBar { get; private set; } = null!;
+        [PluginService] public static IDtrBar DtrBar { get; private set; } = null!;
+        [PluginService] public static IPluginLog PluginLog { get; private set; } = null!;
 
         public void Dispose() {
             PluginInterface.UiBuilder.Draw -= this.BuildUI;
@@ -69,7 +67,7 @@ namespace FPSPlugin {
             return PluginConfig.ShowDecimals ? $"{value,6:##0.00}" : $"{value,3:##0}";
         }
 
-        private unsafe void OnFrameworkUpdate(Framework dFramework) {
+        private unsafe void OnFrameworkUpdate(IFramework dFramework) {
             var framework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance();
             try {
                 if (!(fontBuilt || fontLoadFailed)) return;
@@ -120,7 +118,7 @@ namespace FPSPlugin {
                 }
 
             } catch (Exception ex) {
-                PluginLog.LogError(ex.Message);
+                PluginLog.Error(ex.Message);
             }
         }
 
@@ -189,12 +187,12 @@ namespace FPSPlugin {
                     font = ImGui.GetIO().Fonts.AddFontFromFileTTF(fontFile, PluginConfig.FontSize);
                     fontBuilt = true;
                 } catch (Exception ex) {
-                    PluginLog.Log($"Font failed to load. {fontFile}");
-                    PluginLog.Log(ex.ToString());
+                    PluginLog.Error($"Font failed to load. {fontFile}");
+                    PluginLog.Error(ex.ToString());
                     fontLoadFailed = true;
                 }
             } else {
-                PluginLog.Log($"Font doesn't exist. {fontFile}");
+                PluginLog.Warning($"Font doesn't exist. {fontFile}");
                 fontLoadFailed = true;
             }
         }

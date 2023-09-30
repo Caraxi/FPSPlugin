@@ -14,11 +14,11 @@
     </PropertyGroup>
     <PropertyGroup Label="Feature">
         <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
-        <Version>1.6.0.5</Version>
+        <Version>1.6.1.0</Version>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Configuration)'=='Release'">
         <AppOutputBase>$(MSBuildProjectDirectory)\</AppOutputBase>
-        <PathMap>$(AppOutputBase)=F:\repo\FPSPlugin\FPSPlugin</PathMap>
+        <PathMap>$(AppOutputBase)=C:\ffxiv\repo\FPSPlugin\FPSPlugin</PathMap>
         <Deterministic>true</Deterministic>
     </PropertyGroup>
     <PropertyGroup>
@@ -28,7 +28,7 @@
         <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     </PropertyGroup>
     <ItemGroup>
-        <PackageReference Include="DalamudPackager" Version="2.1.10" />
+        <PackageReference Include="DalamudPackager" Version="2.1.12" />
         <Reference Include="Dalamud">
             <Private>false</Private>
             <HintPath>$(DalamudLibPath)\Dalamud.dll</HintPath>
