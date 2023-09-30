@@ -75,6 +75,8 @@ namespace FPSPlugin {
                     dtrEntry ??= DtrBar.Get("FPS Display");
                     dtrEntry.Shown = PluginConfig.Enable;
                     dtrEntry.Text = fpsText;
+                    dtrEntry.OnClick = PluginConfig.DtrOpenSettings ? OpenConfigUi : null;
+                    dtrEntry.Tooltip = PluginConfig.DtrTooltip && fpsHistory.Count > 0 ? $"Average:{FormatFpsValue(fpsHistory.Average())}\nMinimum:{FormatFpsValue(fpsHistory.Min())}" : null;
                 } else {
                     if (dtrEntry != null) dtrEntry.Shown = false;
                 }
@@ -90,7 +92,7 @@ namespace FPSPlugin {
                     if (!PluginConfig.NoLabels && !PluginConfig.AlternativeFPSLabel) fpsText += "FPS:";
                     fpsText += $"{FormatFpsValue(fps)}";
                     if (!PluginConfig.NoLabels && PluginConfig.AlternativeFPSLabel) fpsText += "fps";
-                    if (PluginConfig.ShowAverage || PluginConfig.ShowMinimum) {
+                    if (PluginConfig.ShowAverage || PluginConfig.ShowMinimum || (PluginConfig.UseDtr && PluginConfig.DtrTooltip)) {
                         if (!windowInactive) fpsHistory.Add(fps);
 
                         if (fpsHistory.Count > PluginConfig.HistorySnapshotCount) {

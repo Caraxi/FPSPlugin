@@ -43,6 +43,8 @@ namespace FPSPlugin {
         public bool NoLabels;
         public bool AlternativeFPSLabel;
         public bool UseDtr = true;
+        public bool DtrTooltip = true;
+        public bool DtrOpenSettings = true;
 
         public FPSPluginFont Font = FPSPluginFont.PluginDefault;
         
@@ -83,6 +85,12 @@ namespace FPSPlugin {
             ImGui.TextDisabled("/pfps [show|hide|toggle]");
 
             changed |= ImGui.Checkbox("Use Server Info Bar##fpsPluginUseDTR", ref UseDtr);
+            if (UseDtr) {
+                ImGui.Indent();
+                changed |= ImGui.Checkbox("Enable Tooltip##fpsPluginDtrTooltip", ref DtrTooltip);
+                changed |= ImGui.Checkbox("Click to open settings##fpsPluginDtrOpenSettings", ref DtrOpenSettings);
+                ImGui.Unindent();
+            }
             if (!UseDtr) changed |= ImGui.Checkbox("Lock Display##fpsPluginLockSetting", ref Locked);
             changed |= ImGui.Checkbox("Show Decimals##fpsPluginDecimalsSetting", ref ShowDecimals);
             changed |= ImGui.Checkbox("Show Average##fpsPluginShowAverageSetting", ref ShowAverage);
