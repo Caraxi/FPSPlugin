@@ -39,10 +39,8 @@ namespace FPSPlugin {
         public bool Enable = true;
         public bool ShowAverage;
         public bool ShowMinimum;
-        public bool MultiLine;
         public bool NoLabels;
         public bool AlternativeFPSLabel;
-        public bool UseDtr = true;
         public bool DtrTooltip = true;
         public bool DtrOpenSettings = true;
 
@@ -84,54 +82,18 @@ namespace FPSPlugin {
             ImGui.SameLine();
             ImGui.TextDisabled("/pfps [show|hide|toggle]");
 
-            changed |= ImGui.Checkbox("Use Server Info Bar##fpsPluginUseDTR", ref UseDtr);
-            if (UseDtr) {
-                ImGui.Indent();
-                changed |= ImGui.Checkbox("Enable Tooltip##fpsPluginDtrTooltip", ref DtrTooltip);
-                changed |= ImGui.Checkbox("Click to open settings##fpsPluginDtrOpenSettings", ref DtrOpenSettings);
-                ImGui.Unindent();
-            }
-            if (!UseDtr) changed |= ImGui.Checkbox("Lock Display##fpsPluginLockSetting", ref Locked);
+
+
+
+            changed |= ImGui.Checkbox("Enable Tooltip##fpsPluginDtrTooltip", ref DtrTooltip);
+            changed |= ImGui.Checkbox("Click to open settings##fpsPluginDtrOpenSettings", ref DtrOpenSettings);
+                
             changed |= ImGui.Checkbox("Show Decimals##fpsPluginDecimalsSetting", ref ShowDecimals);
             changed |= ImGui.Checkbox("Show Average##fpsPluginShowAverageSetting", ref ShowAverage);
             changed |= ImGui.Checkbox("Show Minimum##fpsPluginShowMinimumSetting", ref ShowMinimum);
             changed |= ImGui.Checkbox("Hide Labels##fpsPluginNoLabelsSetting", ref NoLabels);
             if (!NoLabels) changed |= ImGui.Checkbox("Alternative FPS Label##fpsPluginAlternativeFPSLabelSetting", ref AlternativeFPSLabel);
-            if (!UseDtr) changed |= ImGui.Checkbox("Multiline##fpsPluginMultiline", ref MultiLine);
             changed |= ImGui.InputInt("Tracking Timespan (Seconds)", ref HistorySnapshotCount, 1, 60);
-
-            if (!UseDtr && ImGui.TreeNode("Style Options###fpsPluginStyleOptions")) {
-                changed |= ImGui.SliderFloat("Background Opacity##fpsPluginOpacitySetting", ref Alpha, 0, 1);
-
-                if (ImGui.BeginCombo("Font##fpsPluginFontSelect", this.Font.Description())) {
-                    foreach (var v in (FPSPluginFont[]) Enum.GetValues(typeof(FPSPluginFont))) {
-                        if (ImGui.Selectable($"{v.Description()}##fpsPluginFont_{v}")) {
-                            this.Font = v;
-                            changed = true;
-                            FontChangeTime = DateTime.Now.Ticks;
-                        }
-                    }
-                    ImGui.EndCombo();
-                }
-                
-                 
-                if (ImGui.SliderFloat("Font Size##fpsPluginFontSizeSetting", ref FontSize, 6, 90, "%.0f")) {
-                    FontChangeTime = DateTime.Now.Ticks;
-                    changed = true;
-                }
-                ImGui.SameLine();
-                if (ImGui.SmallButton("Reload Font")) {
-                    plugin.ReloadFont();
-                }
-                changed |= ImGui.ColorEdit4("Text Colour##fpsPluginColorSetting", ref Colour);
-
-                changed |= ImGui.SliderFloat("Corner Rounding###fpsPluginCornerRounding", ref WindowCornerRounding, 0f, 20f, "%.0f");
-                changed |= ImGui.SliderFloat2("Window Padding###fpsPluginWindowPadding", ref WindowPadding, 0f, 20f, "%.0f");
-
-                changed |= ImGui.SliderInt("Border Width###fpsPluginBorderWidth", ref BorderSize, -1, 3, BorderSize < 0 ? "Dalamud Default" : $"{BorderSize}");
-
-                ImGui.TreePop();
-            }
 
             ImGui.Separator();
             if (ImGui.Button("Restore Default##fpsPluginDefaultsButton")) {
