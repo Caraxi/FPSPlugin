@@ -3,6 +3,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
+using Dalamud.Game.Addon.Events.EventDataTypes;
 using Dalamud.Game.Gui.Dtr;
 using Dalamud.IoC;
 using Dalamud.Plugin.Services;
@@ -119,6 +120,10 @@ namespace FPSPlugin {
 
         private void OpenConfigUi() {
             OnConfigCommandHandler(null, null);
+        }
+        
+        private void OpenConfigUi(AddonMouseEventData obj) {
+            OpenConfigUi();
         }
 
         public void OnConfigCommandHandler(string command, string args) {

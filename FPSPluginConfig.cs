@@ -1,5 +1,5 @@
 ﻿using Dalamud.Configuration;
-using ImGuiNET;
+using Dalamud.Bindings.ImGui;
 using System;
 using System.ComponentModel;
 using System.Diagnostics;
