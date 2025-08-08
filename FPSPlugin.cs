@@ -122,7 +122,7 @@ namespace FPSPlugin {
             OnConfigCommandHandler(null, null);
         }
         
-        private void OpenConfigUi(AddonMouseEventData obj) {
+        private void OpenConfigUi(DtrInteractionEvent obj) {
             OpenConfigUi();
         }
 

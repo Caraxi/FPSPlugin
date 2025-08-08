@@ -25,7 +25,7 @@
         <GeneratePackageOnBuild>false</GeneratePackageOnBuild>
         <AutoGenerateBindingRedirects>true</AutoGenerateBindingRedirects>
         <RestorePackagesWithLockFile>true</RestorePackagesWithLockFile>
-        <DalamudLibPath>C:\ffxiv\repo\Dalamud\bin\Release\</DalamudLibPath>
+        <DalamudLibPath>$(appdata)\XIVLauncher\addon\Hooks\dev\</DalamudLibPath>
     </PropertyGroup>
     <ItemGroup>
         <PackageReference Include="DalamudPackager" Version="13.0.0" />
