@@ -1,40 +1,17 @@
 ﻿using Dalamud.Configuration;
 using Dalamud.Bindings.ImGui;
 using System;
-using System.ComponentModel;
 using System.Diagnostics;
-using System.Numerics;
 using System.Reflection;
 
 namespace FPSPlugin {
-
-    public enum FPSPluginFont {
-        [Description("Dalamud Default")]
-        DalamudDefault,
-        
-        [Description("Default (font.ttf)")]
-        PluginDefault,
-    }
-
-    public static class EnumExtensions {
-        public static string Description(this FPSPluginFont value)
-        {
-            var fi = value.GetType().GetField(value.ToString());
-            if (fi is null) return $"{value}";
-            var attributes = (DescriptionAttribute[])fi.GetCustomAttributes(typeof(DescriptionAttribute), false);
-            return attributes.Length > 0 ? attributes[0].Description : value.ToString();
-        }
-    }
-    
     
     public class FPSPluginConfig : IPluginConfiguration {
         [NonSerialized] private FPSPlugin plugin;
-        [NonSerialized] public long FontChangeTime = DateTime.Now.Ticks;
         [NonSerialized] public string TestText = string.Empty;
 
         public int Version { get; set; }
 
-        public bool Locked;
         public bool ShowDecimals;
         public bool Enable = true;
         public bool ShowAverage;
@@ -44,17 +21,7 @@ namespace FPSPlugin {
         public bool DtrTooltip = true;
         public bool DtrOpenSettings = true;
 
-        public FPSPluginFont Font = FPSPluginFont.PluginDefault;
-        
-        public float Alpha = 0.5f;
-        public float FontSize = 16;
-        public float WindowCornerRounding;
-        
         public int HistorySnapshotCount = 300;
-        public int BorderSize = -1;
-
-        public Vector4 Colour = new Vector4(0, 1, 1, 1);
-        public Vector2 WindowPadding = new Vector2(4, 4);
 
         public void LoadDefaults() {
             var defaults = new FPSPluginConfig();

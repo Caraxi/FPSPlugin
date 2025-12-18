@@ -3,7 +3,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
-using Dalamud.Game.Addon.Events.EventDataTypes;
 using Dalamud.Game.Gui.Dtr;
 using Dalamud.IoC;
 using Dalamud.Plugin.Services;
@@ -37,7 +36,7 @@ namespace FPSPlugin {
         }
 
         public FPSPlugin() {
-            PluginConfig = (FPSPluginConfig) PluginInterface.GetPluginConfig() ?? new FPSPluginConfig();
+            PluginConfig = PluginInterface.GetPluginConfig() as FPSPluginConfig ?? new FPSPluginConfig();
             PluginConfig.Init(this);
             fpsText = string.Empty;
             fpsHistory = new List<float>();
@@ -59,7 +58,7 @@ namespace FPSPlugin {
         private unsafe void OnFrameworkUpdate(IFramework dFramework) {
             var framework = FFXIVClientStructs.FFXIV.Client.System.Framework.Framework.Instance();
             try {
-                if (fpsText != null) {
+                if (!string.IsNullOrWhiteSpace(fpsText)) {
                     dtrEntry ??= DtrBar.Get("FPS Display");
                     dtrEntry.Shown = PluginConfig.Enable;
                     dtrEntry.Text = fpsText;
