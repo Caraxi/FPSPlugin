@@ -7,7 +7,7 @@ using System.Reflection;
 namespace FPSPlugin {
     
     public class FPSPluginConfig : IPluginConfiguration {
-        [NonSerialized] private FPSPlugin plugin;
+        [NonSerialized] private FPSPlugin plugin = null!;
         [NonSerialized] public string TestText = string.Empty;
 
         public int Version { get; set; }

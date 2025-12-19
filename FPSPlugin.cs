@@ -4,6 +4,7 @@ using System.Collections.Generic;
 using System.Diagnostics;
 using System.Linq;
 using Dalamud.Game.Gui.Dtr;
+using Dalamud.Game.Text.SeStringHandling;
 using Dalamud.IoC;
 using Dalamud.Plugin.Services;
 
@@ -17,7 +18,7 @@ namespace FPSPlugin {
         private List<float> fpsHistory;
         private Stopwatch fpsHistoryInterval;
         private string fpsText;
-        private IDtrBarEntry dtrEntry;
+        private IDtrBarEntry? dtrEntry;
         private float maxSeenFps;
 
         [PluginService] public static  ICommandManager CommandManager { get; set; } = null!;
@@ -63,7 +64,7 @@ namespace FPSPlugin {
                     dtrEntry.Shown = PluginConfig.Enable;
                     dtrEntry.Text = fpsText;
                     dtrEntry.OnClick = PluginConfig.DtrOpenSettings ? OpenConfigUi : null;
-                    dtrEntry.Tooltip = PluginConfig.DtrTooltip && fpsHistory.Count > 0 ? $"Average:{FormatFpsValue(fpsHistory.Average())}\nMinimum:{FormatFpsValue(fpsHistory.Min())}" : null;
+                    dtrEntry.Tooltip = PluginConfig.DtrTooltip && fpsHistory.Count > 0 ? (SeString) $"Average:{FormatFpsValue(fpsHistory.Average())}\nMinimum:{FormatFpsValue(fpsHistory.Min())}" : null;
                 } else {
                     if (dtrEntry != null) dtrEntry.Shown = false;
                 }
@@ -118,7 +119,7 @@ namespace FPSPlugin {
         }
 
         private void OpenConfigUi() {
-            OnConfigCommandHandler(null, null);
+            OnConfigCommandHandler(string.Empty, string.Empty);
         }
         
         private void OpenConfigUi(DtrInteractionEvent obj) {
@@ -126,7 +127,7 @@ namespace FPSPlugin {
         }
 
         public void OnConfigCommandHandler(string command, string args) {
-            if (args != null) {
+            if (string.IsNullOrWhiteSpace(args)) {
                 switch (args.ToLower()) {
                     case "t":
                     case "toggle": {
